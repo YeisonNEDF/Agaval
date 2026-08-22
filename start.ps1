@@ -263,6 +263,13 @@ function Get-CompatibleNpmExecutable {
         return $null
     }
 
+    if ($null -eq $npmCommand) {
+        $npmNextToNode = Join-Path (Split-Path -Parent $nodeCommand.Source) "npm.cmd"
+        if (Test-Path $npmNextToNode) {
+            $npmCommand = Get-Item $npmNextToNode
+        }
+    }
+
     $versionText = [string](& $nodeCommand.Source --version 2>$null | Select-Object -First 1)
     if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($versionText)) {
         return $null
@@ -343,6 +350,15 @@ function Test-NativeRequirements([switch]$DoNotStartServices) {
 }
 
 function Require-NativeRequirements {
+    if (
+        $script:NativeReady -and
+        $null -ne $script:DotnetExecutable -and
+        $null -ne $script:NpmExecutable -and
+        -not [string]::IsNullOrWhiteSpace($script:NativeConnection)
+    ) {
+        return
+    }
+
     if (-not (Test-NativeRequirements)) {
         $databaseHelp = ""
         if ([string]::IsNullOrWhiteSpace($script:NativeConnection)) {

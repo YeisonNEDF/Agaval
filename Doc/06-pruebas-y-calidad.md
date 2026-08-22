@@ -100,6 +100,8 @@ La instalación asistida añadió verificaciones no destructivas `--check`/`-Che
 
 Después de reproducir un fallo de detección en Windows con Node 25, se eliminó la evaluación JavaScript usada para obtener la versión y se reemplazó por `node --version`. El diagnóstico se verificó con Node 22.19.0 y se declaró en `package.json` el rango oficial de Angular 20.3. La pasada posterior mantuvo lint limpio, 20 pruebas frontend aprobadas y build de producción exitoso.
 
+Una segunda reproducción en Git Bash con Node 24.19 mostró que el primer diagnóstico era correcto, pero la validación redundante previa al arranque podía perder la resolución de `npm.cmd`. El inicio nativo ahora conserva el diagnóstico ya validado y, como respaldo, busca `npm.cmd` en el mismo directorio de `node.exe`. Git Bash establece además la página de códigos UTF-8 antes de delegar en Windows PowerShell.
+
 La prueba Docker se ejecutó en macOS Apple Silicon mediante emulación `linux/amd64`. Es válida como evidencia funcional de desarrollo, pero no convierte esa combinación en una plataforma SQL Server soportada oficialmente por Microsoft; la distinción se explica en `Doc/08-ejecucion-multiplataforma.md`.
 
 Si una ejecución posterior cambia estos valores, el resultado de CI es la fuente de verdad y debe corregirse antes de desplegar.

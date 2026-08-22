@@ -437,6 +437,7 @@ forward_to_windows() {
   [ "$ACTION" = "stop" ] && set -- "$@" -Stop
   [ "$ACTION" = "check" ] && set -- "$@" -Check
   [ "$NO_INSTALL" = "true" ] && set -- "$@" -NoInstall
+  command -v chcp.com >/dev/null 2>&1 && chcp.com 65001 >/dev/null 2>&1 || true
   printf 'Windows detectado: se delega el diagnóstico y la instalación asistida a start.ps1.\n'
 
   if powershell.exe "$@"; then
