@@ -32,13 +32,21 @@ Requiere Docker Desktop. SQL Server, la API y el frontend se levantan juntos:
 > La imagen oficial de SQL Server es x86-64. En Apple Silicon, Compose solicita `linux/amd64`; Docker Desktop puede emularla, pero será más lenta y Microsoft no considera ese modo una plataforma soportada. Si falla, use una instancia SQL Server remota o una máquina x86-64.
 
 ```bash
-cp .env.example .env
-docker compose up --build
+./start.sh
+```
+
+El script crea `.env` desde `.env.example` cuando hace falta, valida Docker Compose, construye los contenedores y espera a que API y frontend respondan. Comandos adicionales:
+
+```bash
+./start.sh --logs        # seguir logs
+./start.sh --status      # consultar estado
+./start.sh --stop        # detener sin borrar la base
+./start.sh --foreground  # ejecutar en primer plano
+./start.sh --no-build    # reutilizar imágenes existentes
 ```
 
 - Frontend: `http://localhost:4200`
 - API: `http://localhost:5100`
-- Swagger: `http://localhost:5100/swagger`
 - SQL Server: `localhost:1433`
 
 La API espera a que SQL Server esté saludable. Después ejecuta `MigrateAsync`: si `GestorInventarioDB` no existe, la crea; aplica las migraciones pendientes y carga categorías y productos de demostración. Las siguientes ejecuciones son idempotentes gracias a `__EFMigrationsHistory`.
