@@ -581,8 +581,8 @@ function Show-NativeStatus {
 
 function Show-Diagnostics {
     if ($script:ActiveMode -eq "Docker") {
-        & docker compose ps
-        & docker compose logs --tail=80
+        & docker compose ps 2>&1 | Out-Host
+        & docker compose logs --tail=80 2>&1 | Out-Host
         return
     }
 
@@ -590,12 +590,17 @@ function Show-Diagnostics {
         $logPath = Join-Path $RunDirectory $logName
         if (Test-Path $logPath) {
             Write-Host "`n$logName"
-            Get-Content $logPath -Tail 80
+            Get-Content $logPath -Tail 80 | Out-Host
         }
     }
 }
 
-function Wait-ForUrl([string]$Url, [string]$ServiceName, [int]$MaxAttempts) {
+function Wait-ForUrl(
+    [string]$Url,
+    [string]$ServiceName,
+    [int]$MaxAttempts,
+    [System.Diagnostics.Process]$ServiceProcess = $null
+) {
     Write-Host -NoNewline "Esperando $ServiceName"
 
     for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
@@ -605,12 +610,17 @@ function Wait-ForUrl([string]$Url, [string]$ServiceName, [int]$MaxAttempts) {
             return $true
         } catch {
             Write-Host -NoNewline "."
+
+            if ($null -ne $ServiceProcess -and $ServiceProcess.HasExited) {
+                Write-Host "`n$ServiceName terminó antes de responder (código $($ServiceProcess.ExitCode))." -ForegroundColor Red
+                return $false
+            }
+
             Start-Sleep -Seconds 2
         }
     }
 
     Write-Host "`nTiempo de espera agotado para $ServiceName." -ForegroundColor Red
-    Show-Diagnostics
     return $false
 }
 
@@ -643,10 +653,14 @@ function Start-DockerMode([string]$FrontendPort, [string]$BackendPort, [string]$
     }
 
     if (-not $Foreground) {
-        if (-not (Wait-ForUrl "http://localhost:$BackendPort/health" "la API" 90)) {
+        $apiReady = Wait-ForUrl "http://localhost:$BackendPort/health" "la API" 90
+        if ($apiReady -ne $true) {
+            Show-Diagnostics
             Throw-SetupError "La API no respondió."
         }
-        if (-not (Wait-ForUrl "http://localhost:$FrontendPort" "el frontend" 30)) {
+        $frontendReady = Wait-ForUrl "http://localhost:$FrontendPort" "el frontend" 30
+        if ($frontendReady -ne $true) {
+            Show-Diagnostics
             Throw-SetupError "El frontend no respondió."
         }
 
@@ -755,12 +769,16 @@ function Start-NativeMode([string]$FrontendPort, [string]$BackendPort, [string]$
     $frontendProcess = Start-Process @frontendStart
     Set-Content -Path $frontendPidFile -Value $frontendProcess.Id
 
-    if (-not (Wait-ForUrl "http://localhost:$BackendPort/health" "la API nativa" 90)) {
+    $apiReady = Wait-ForUrl "http://localhost:$BackendPort/health" "la API nativa" 90 $backendProcess
+    if ($apiReady -ne $true) {
         Stop-NativeProcesses
+        Show-Diagnostics
         Throw-SetupError "La API nativa no respondió."
     }
-    if (-not (Wait-ForUrl "http://localhost:$FrontendPort" "el frontend nativo" 45)) {
+    $frontendReady = Wait-ForUrl "http://localhost:$FrontendPort" "el frontend nativo" 45 $frontendProcess
+    if ($frontendReady -ne $true) {
         Stop-NativeProcesses
+        Show-Diagnostics
         Throw-SetupError "El frontend nativo no respondió."
     }
 

@@ -53,18 +53,12 @@ jobs:
       - name: Validate Git Bash entry point
         shell: bash
         run: ./start.sh --check --no-install
-      - name: Start full native stack from start.sh
+      - name: Start and verify full native stack from start.sh
         shell: bash
-        run: ./start.sh --mode native --no-install
-      - name: Verify API, frontend and Angular proxy
-        shell: powershell
         run: |
-          $health = Invoke-WebRequest -UseBasicParsing http://localhost:5100/health
-          $frontend = Invoke-WebRequest -UseBasicParsing http://localhost:4200
-          $proxy = Invoke-WebRequest -UseBasicParsing http://localhost:4200/api/productos
-          if ($health.StatusCode -ne 200 -or $frontend.StatusCode -ne 200 -or $proxy.StatusCode -ne 200) {
-              throw "El smoke test nativo de Windows no respondió HTTP 200."
-          }
+          trap './start.sh --stop --no-install || true' EXIT
+          ./start.sh --mode native --no-install
+          powershell.exe -NoProfile -Command '$health = Invoke-WebRequest -UseBasicParsing http://localhost:5100/health; $frontend = Invoke-WebRequest -UseBasicParsing http://localhost:4200; $proxy = Invoke-WebRequest -UseBasicParsing http://localhost:4200/api/productos; if ($health.StatusCode -ne 200 -or $frontend.StatusCode -ne 200 -or $proxy.StatusCode -ne 200) { throw "El smoke test nativo de Windows no respondió HTTP 200." }'
       - name: Print launcher diagnostics on failure
         if: failure()
         shell: powershell
@@ -75,10 +69,6 @@ jobs:
           Get-Content .run\backend.out.log -ErrorAction SilentlyContinue
           Get-Content .run\frontend.err.log -ErrorAction SilentlyContinue
           Get-Content .run\frontend.out.log -ErrorAction SilentlyContinue
-      - name: Stop native stack
-        if: always()
-        shell: bash
-        run: ./start.sh --stop --no-install
 
   backend:
     name: Backend
