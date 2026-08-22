@@ -55,6 +55,8 @@ Windows usa automáticamente `(localdb)\MSSQLLocalDB` cuando SQL Server Express 
 
 Si `start.sh` se abre desde Git Bash en una ventana temporal y ocurre un error, la ventana espera Enter antes de cerrarse. El detalle completo queda guardado en `.run/launcher-error.log` para poder diagnosticarlo aunque la consola se haya cerrado.
 
+El recorrido Windows de `start.sh` también se ejecuta en CI sobre un runner real: prepara .NET 10, Node 24 y LocalDB, inicia backend y frontend, y comprueba la API y el proxy de Angular antes de detenerlos.
+
 Antes de iniciar, PowerShell muestra un diagnóstico por requisito. Si no existe ninguna ruta completa, instala con WinGet el software necesario que puede automatizarse (`Microsoft.DotNet.SDK.10`, `OpenJS.NodeJS.LTS` o `Docker.DockerDesktop`), vuelve a cargar el `PATH` y verifica otra vez. WinGet o el instalador pueden solicitar elevación. LocalDB se deja como selección explícita de SQL Server Express; el modo `Auto` instala Docker en su lugar para no adivinar opciones del motor de datos.
 
 Para revisar el equipo sin instalar ni arrancar nada:
