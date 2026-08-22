@@ -25,121 +25,97 @@ Agaval/
 └── docker-compose.yml       aplicación + SQL Server local
 ```
 
-## Opción recomendada: ejecutar todo con Docker
+## Inicio multiplataforma
 
-### Requisito único
+El modo `Auto` detecta el sistema operativo y usa la opción más directa disponible:
 
-Solo se necesita Docker con el complemento Compose:
+1. carga o crea `.env` desde `.env.example`;
+2. comprueba .NET 10, Node.js 20+ y una conexión SQL Server configurada;
+3. si los tres requisitos nativos existen, ejecuta API y Angular directamente en el host;
+4. si falta cualquiera, usa Docker Compose como entorno reproducible;
+5. espera los health checks y muestra las URLs finales.
 
-- macOS y Windows: [Docker Desktop](https://docs.docker.com/get-started/get-docker/).
-- Linux: [Docker Engine](https://docs.docker.com/engine/install/) y el plugin Docker Compose.
-
-No es necesario instalar .NET, Node.js, npm ni SQL Server en la máquina. Después de instalar Docker, SQL Server, la API y el frontend se levantan juntos con un solo comando:
-
-> La imagen oficial de SQL Server es x86-64. En Apple Silicon, Compose solicita `linux/amd64`; Docker Desktop puede emularla, pero será más lenta y Microsoft no considera ese modo una plataforma soportada. Si falla, use una instancia SQL Server remota o una máquina x86-64.
+### macOS y Linux
 
 ```bash
+chmod +x start.sh
 ./start.sh
 ```
 
-El script crea `.env` desde `.env.example` cuando hace falta, valida Docker Compose, construye los contenedores y espera a que API y frontend respondan. Comandos adicionales:
+### Windows
 
-```bash
-./start.sh --logs        # seguir logs
-./start.sh --status      # consultar estado
-./start.sh --stop        # detener sin borrar la base
-./start.sh --foreground  # ejecutar en primer plano
-./start.sh --no-build    # reutilizar imágenes existentes
+Desde el Explorador puede abrir `start.cmd`. Desde PowerShell:
+
+```powershell
+.\start.ps1 -Mode Auto
 ```
+
+Windows usa automáticamente `(localdb)\MSSQLLocalDB` cuando SQL Server Express LocalDB está instalado. Si LocalDB, .NET 10 o Node.js no están disponibles, cambia a Docker Desktop.
+
+### Selección explícita
+
+| Objetivo | macOS/Linux/WSL | Windows PowerShell |
+| --- | --- | --- |
+| Detección automática | `./start.sh` | `.\start.ps1` |
+| Forzar Docker | `./start.sh --mode docker` | `.\start.ps1 -Mode Docker` |
+| Forzar ejecución nativa | `./start.sh --mode native` | `.\start.ps1 -Mode Native` |
+| Ver logs | `./start.sh --logs` | `.\start.ps1 -Logs` |
+| Consultar estado | `./start.sh --status` | `.\start.ps1 -Status` |
+| Detener sin borrar datos | `./start.sh --stop` | `.\start.ps1 -Stop` |
+
+Los launchers guardan PID y logs nativos en `.run/`; esa carpeta no se versiona. En Docker, los datos persisten en el volumen `agaval_sqlserver-data`.
+
+### Requisitos por modo
+
+| Plataforma | Modo Docker | Modo nativo |
+| --- | --- | --- |
+| macOS Intel/Apple Silicon | Docker Desktop | .NET 10, Node 20+ y SQL Server remoto mediante `NATIVE_DATABASE_CONNECTION`. SQL Server no tiene motor nativo para macOS. |
+| Windows 10/11 | Docker Desktop | .NET 10, Node 20+ y LocalDB o una conexión SQL Server explícita. |
+| Linux x86-64 | Docker Engine + Compose | .NET 10, Node 20+ y SQL Server instalado/remoto. |
+| WSL 2 | Docker Desktop con integración WSL | .NET 10, Node 20+ y una conexión SQL Server explícita. |
+
+Docker evita instalar .NET, Node y SQL Server por separado. En macOS/Windows se instala desde [Docker Desktop](https://docs.docker.com/get-started/get-docker/); en Linux se usa [Docker Engine](https://docs.docker.com/engine/install/) con el plugin Compose.
+
+> La imagen oficial de SQL Server es `linux/amd64`. Docker Desktop puede emularla en Apple Silicon para desarrollo —y esta solución fue verificada así—, pero Microsoft no soporta oficialmente SQL Server bajo emulación. Para una evaluación estrictamente soportada use Windows/x86-64, Linux x86-64 o un SQL Server remoto.
 
 ### Configuración completa
 
-`.env.example` contiene todos los valores necesarios y funciona sin modificaciones. En el primer inicio se copia automáticamente como `.env`:
+`.env.example` funciona sin modificaciones y se copia automáticamente como `.env`:
 
 | Variable | Predeterminado | Uso |
 | --- | --- | --- |
 | `COMPOSE_PROJECT_NAME` | `agaval` | Agrupa contenedores, red y volumen. |
-| `FRONTEND_PORT` | `4200` | Puerto público de Angular/Nginx. |
+| `RUN_MODE` | `auto` | Selecciona `auto`, `docker` o `native`. |
+| `FRONTEND_PORT` | `4200` | Puerto público del frontend. |
 | `BACKEND_PORT` | `5100` | Puerto público de la API. |
-| `SQLSERVER_PORT` | `1433` | Puerto público de SQL Server. |
-| `SQLSERVER_IMAGE` | SQL Server 2022 | Imagen oficial de la base. |
-| `SQLSERVER_PLATFORM` | `linux/amd64` | Arquitectura requerida por SQL Server. |
+| `SQLSERVER_PORT` | `1433` | Puerto público de SQL Server en Docker. |
+| `SQLSERVER_IMAGE` | SQL Server 2022 | Imagen de base de datos. |
+| `SQLSERVER_PLATFORM` | `linux/amd64` | Arquitectura publicada por SQL Server. |
 | `MSSQL_PID` | `Developer` | Edición gratuita para desarrollo. |
-| `MSSQL_SA_PASSWORD` | clave local de ejemplo | Credencial exclusiva del entorno local. |
+| `MSSQL_SA_PASSWORD` | clave local de ejemplo | Credencial exclusiva del Compose local. |
 | `DATABASE_NAME` | `GestorInventarioDB` | Base creada por las migraciones. |
-| `ASPNETCORE_ENVIRONMENT` | `Production` | Entorno de ejecución de la API. |
-| `APPLY_MIGRATIONS_ON_STARTUP` | `true` | Crea esquema y seed automáticamente. |
-| `PUBLIC_HOST` | `localhost` | Host mostrado al finalizar el inicio. |
+| `ASPNETCORE_ENVIRONMENT` | `Production` | Entorno de la API dentro de Compose. |
+| `APPLY_MIGRATIONS_ON_STARTUP` | `true` | Aplica migración y seed al iniciar. |
+| `PUBLIC_HOST` | `localhost` | Host que se muestra al finalizar. |
+| `NATIVE_DATABASE_CONNECTION` | vacío | Conexión necesaria para modo nativo fuera de LocalDB. |
 
-Para cambiar un puerto o contraseña solo hay que editar `.env`. Ese archivo es local y no se versiona; `.env.example` es la plantilla pública reproducible.
+Ejemplo nativo para un SQL Server local/remoto:
 
-- Frontend: `http://localhost:4200`
-- API: `http://localhost:5100`
-- SQL Server: `localhost:1433`
+```dotenv
+RUN_MODE=native
+NATIVE_DATABASE_CONNECTION=Server=localhost,1433;Database=GestorInventarioDB;User Id=sa;Password=SU_CLAVE;Encrypt=True;TrustServerCertificate=True
+```
 
-La API espera a que SQL Server esté saludable. Después ejecuta `MigrateAsync`: si `GestorInventarioDB` no existe, la crea; aplica las migraciones pendientes y carga categorías y productos de demostración. Las siguientes ejecuciones son idempotentes gracias a `__EFMigrationsHistory`.
+El archivo `.env` es local y está ignorado por Git; `.env.example` es la plantilla pública. La API ejecuta `MigrateAsync`, crea la base, aplica migraciones y carga datos de demostración de forma idempotente.
 
-Para reiniciar completamente los datos locales:
+Para eliminar deliberadamente todos los datos Docker y empezar desde cero:
 
 ```bash
 docker compose down --volumes
-docker compose up --build
+./start.sh --mode docker
 ```
 
-`docker compose down --volumes` elimina el volumen SQL Server de este proyecto y todos sus datos locales.
-
-## Ejecución sin Docker
-
-### Requisitos
-
-- .NET SDK 10.
-- Node.js 20 LTS y npm 10 o superior.
-- SQL Server 2022 accesible en `localhost:1433` o una conexión equivalente.
-- Chrome o Chromium para los tests del frontend.
-
-La configuración Development incluida espera:
-
-```text
-Server=localhost,1433;Database=GestorInventarioDB;User Id=sa;Password=Agaval_local_2026!;Encrypt=True;TrustServerCertificate=True
-```
-
-Puede reemplazarla sin editar archivos:
-
-```bash
-export ConnectionStrings__Database='Server=SERVIDOR;Database=GestorInventarioDB;User Id=USUARIO;Password=CLAVE;Encrypt=True;TrustServerCertificate=True'
-```
-
-### Backend
-
-```bash
-cd backend
-dotnet restore Agaval.Inventory.slnx
-dotnet run --project src/Agaval.Inventory.Api --launch-profile http
-```
-
-En Development, `Database:ApplyMigrationsOnStartup` está activo. No hace falta crear manualmente la base ni ejecutar el SQL.
-
-Aplicación manual opcional:
-
-```bash
-cd backend
-dotnet tool restore
-dotnet ef database update \
-  --project src/Agaval.Inventory.Infrastructure \
-  --startup-project src/Agaval.Inventory.Api
-```
-
-[`backend/database/initial.sql`](backend/database/initial.sql) contiene además el script SQL Server idempotente generado por EF Core.
-
-### Frontend
-
-```bash
-cd frontend
-npm ci
-npm start
-```
-
-Abra `http://localhost:4200`. Angular CLI redirige `/api` hacia `http://localhost:5100` mediante `proxy.conf.json`.
+La primera orden elimina el volumen SQL Server y no se ejecuta desde los launchers normales.
 
 ## Verificación
 
@@ -176,3 +152,5 @@ Si una base está parcialmente dañada —por ejemplo, se borró una tabla pero 
 - [`Doc/04-base-de-datos-sql-server.md`](Doc/04-base-de-datos-sql-server.md): inicialización de SQL Server.
 - [`Doc/05-cuestionario-tecnico.md`](Doc/05-cuestionario-tecnico.md): respuestas conceptuales.
 - [`Doc/06-pruebas-y-calidad.md`](Doc/06-pruebas-y-calidad.md): evidencia de calidad.
+- [`Doc/07-guia-entrevista-y-revision.md`](Doc/07-guia-entrevista-y-revision.md): recorrido, discurso y preguntas de revisión.
+- [`Doc/08-ejecucion-multiplataforma.md`](Doc/08-ejecucion-multiplataforma.md): ejecución nativa/Docker y diagnóstico por sistema.

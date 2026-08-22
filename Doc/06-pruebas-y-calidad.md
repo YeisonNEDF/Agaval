@@ -76,7 +76,21 @@ La pasada final debe mantener:
 - Modelo EF Core: sin cambios pendientes frente a la migración SQL Server.
 - Smoke test de API: `/health` y OpenAPI respondieron HTTP 200 con migraciones desactivadas.
 
-Los seis archivos YAML de CI, Compose y Kubernetes fueron parseados correctamente. No se construyeron las imágenes en esta estación porque el ejecutable Docker no está instalado; los builds nativos de los dos artefactos sí se completaron.
+Los seis archivos YAML de CI, Compose y Kubernetes fueron parseados correctamente. En la estación de validación se instaló Docker 29.7.2 con Compose 5.4.0 y se realizó una prueba integral del artefacto:
+
+- construcción multi-stage de las imágenes de backend y frontend;
+- SQL Server en estado `healthy`;
+- aplicación de la migración inicial y carga idempotente del seed;
+- `GET /health` con HTTP 200;
+- `GET /api/productos` y `GET /api/categorias` con HTTP 200 y datos persistidos;
+- frontend servido por Nginx con HTTP 200;
+- conectividad frontend -> reverse proxy -> API -> SQL Server.
+
+También se validó el modo nativo en macOS con .NET SDK 10.0.400 y Node.js 22.19, usando la instancia SQL del contenedor como servicio externo temporal. El launcher inició ambos procesos, y respondieron HTTP 200 `/health`, productos, categorías, frontend y el proxy `/api`; el seed devolvió 2 productos y 3 categorías y no se registraron errores en los logs.
+
+El launcher PowerShell se ejecutó con PowerShell 7.6.5 siguiendo el mismo recorrido nativo. Se verificaron inicio, health checks, paso de una ruta con espacios al proxy, respuestas HTTP 200, detección de PID con `-Status` y cierre limpio con `-Stop`. La detección concreta de LocalDB debe validarse en Windows, ya que LocalDB no existe en macOS.
+
+La prueba Docker se ejecutó en macOS Apple Silicon mediante emulación `linux/amd64`. Es válida como evidencia funcional de desarrollo, pero no convierte esa combinación en una plataforma SQL Server soportada oficialmente por Microsoft; la distinción se explica en `Doc/08-ejecucion-multiplataforma.md`.
 
 Si una ejecución posterior cambia estos valores, el resultado de CI es la fuente de verdad y debe corregirse antes de desplegar.
 
