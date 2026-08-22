@@ -1,0 +1,39 @@
+@AgavalInventoryApi = http://localhost:5100
+
+GET {{AgavalInventoryApi}}/health
+Accept: application/json
+
+###
+
+GET {{AgavalInventoryApi}}/api/categorias
+Accept: application/json
+
+###
+
+GET {{AgavalInventoryApi}}/api/productos?stock=All
+Accept: application/json
+
+###
+
+POST {{AgavalInventoryApi}}/api/productos
+Content-Type: application/json
+
+{
+  "name": "Mouse ergonómico",
+  "description": "Mouse vertical inalámbrico",
+  "price": 129900,
+  "stock": 6,
+  "minimumStock": 4,
+  "categoryId": 1
+}
+
+###
+
+POST {{AgavalInventoryApi}}/api/productos/1/ajustes-stock
+Content-Type: application/json
+
+{
+  "type": "Entry",
+  "quantity": 5,
+  "observation": "Recepción de proveedor"
+}

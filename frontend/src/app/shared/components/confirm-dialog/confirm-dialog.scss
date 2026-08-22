@@ -1,0 +1,30 @@
+.confirm-dialog {
+  width: min(100%, 28rem);
+  padding-top: 1rem;
+
+  &__icon {
+    display: grid;
+    width: 3.25rem;
+    height: 3.25rem;
+    margin: 0 1.5rem;
+    place-items: center;
+    border-radius: 1rem;
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+  }
+
+  h2 {
+    padding-bottom: 0;
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+  }
+
+  &__confirm {
+    --mdc-filled-button-container-color: var(--color-danger);
+    --mdc-filled-button-label-text-color: white;
+  }
+}

@@ -1,0 +1,63 @@
+<form class="stock-dialog" [formGroup]="form" (ngSubmit)="submit()">
+  <header class="stock-dialog__header">
+    <span class="stock-dialog__icon" aria-hidden="true">
+      <mat-icon>swap_vert</mat-icon>
+    </span>
+    <div>
+      <span>Movimiento de inventario</span>
+      <h2 mat-dialog-title>Ajustar stock</h2>
+      <p>{{ data.product.name }}</p>
+    </div>
+  </header>
+
+  <mat-dialog-content>
+    <section class="stock-dialog__summary" aria-label="Resumen del stock">
+      <div>
+        <span>Stock actual</span>
+        <strong>{{ data.product.stock }}</strong>
+      </div>
+      <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+      <div>
+        <span>Stock resultante</span>
+        <strong [class.stock-dialog__result--invalid]="resultingStock() < 0">
+          {{ resultingStock() }}
+        </strong>
+      </div>
+    </section>
+
+    <mat-radio-group formControlName="type" class="stock-dialog__types" aria-label="Tipo de movimiento">
+      <mat-radio-button value="Entry">
+        <strong>Entrada</strong>
+        <small>Suma unidades al inventario</small>
+      </mat-radio-button>
+      <mat-radio-button value="Exit">
+        <strong>Salida</strong>
+        <small>Resta unidades disponibles</small>
+      </mat-radio-button>
+    </mat-radio-group>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Cantidad</mat-label>
+      <input matInput type="number" formControlName="quantity" min="1" step="1" />
+      @if (form.controls.quantity.hasError('exceedsStock')) {
+        <mat-error>La salida supera el stock disponible.</mat-error>
+      } @else if (form.controls.quantity.invalid) {
+        <mat-error>Ingrese una cantidad mayor que cero.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Observación</mat-label>
+      <textarea matInput formControlName="observation" maxlength="255" rows="2"></textarea>
+      <mat-hint>Opcional. Ejemplo: recepción de proveedor.</mat-hint>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button type="submit" [disabled]="form.invalid">
+      <mat-icon aria-hidden="true">check</mat-icon>
+      Registrar movimiento
+    </button>
+  </mat-dialog-actions>
+</form>

@@ -1,0 +1,20 @@
+services:
+  agaval-backend:
+    build:
+      context: ./backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Database: ${AGAVAL_DATABASE_CONNECTION:?Define AGAVAL_DATABASE_CONNECTION}
+      Database__ApplyMigrationsOnStartup: "false"
+    ports:
+      - "5100:8080"
+    restart: unless-stopped
+
+  agaval-frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - agaval-backend
+    ports:
+      - "4200:8080"
+    restart: unless-stopped

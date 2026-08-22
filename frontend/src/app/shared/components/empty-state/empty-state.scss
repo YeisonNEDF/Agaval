@@ -1,0 +1,43 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.empty-state {
+  display: grid;
+  justify-items: center;
+  padding: clamp(2.5rem, 7vw, 5rem) 1.5rem;
+  text-align: center;
+
+  &__icon {
+    display: grid;
+    width: 4rem;
+    height: 4rem;
+    place-items: center;
+    border-radius: 1.2rem;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+
+    mat-icon {
+      width: 2rem;
+      height: 2rem;
+      font-size: 2rem;
+    }
+  }
+
+  &__title {
+    margin: 1.25rem 0 0;
+    font-size: 1.25rem;
+  }
+
+  &__description {
+    max-width: 29rem;
+    margin: 0.6rem 0 0;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+  }
+
+  &__actions {
+    margin-top: 1.25rem;
+  }
+}

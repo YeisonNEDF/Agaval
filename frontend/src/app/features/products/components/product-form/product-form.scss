@@ -1,0 +1,74 @@
+.product-form {
+  width: min(44rem, 90vw);
+
+  &__header {
+    display: flex;
+    gap: 1rem;
+    padding: 1.6rem 1.6rem 0.8rem;
+
+    div > span {
+      color: var(--color-primary);
+      font-size: 0.7rem;
+      font-weight: 750;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 0.3rem 0 0;
+      padding: 0;
+      font-size: 1.5rem;
+    }
+
+    p {
+      margin: 0.45rem 0 0;
+      color: var(--color-text-muted);
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+  }
+
+  &__icon {
+    display: grid;
+    width: 3rem;
+    height: 3rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 0.9rem;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+
+  &__content {
+    padding-top: 0.75rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.2rem 1rem;
+    padding-top: 0.25rem;
+  }
+
+  &__field--wide {
+    grid-column: 1 / -1;
+  }
+
+  &__actions {
+    padding: 0.8rem 1.5rem 1.4rem;
+  }
+}
+
+@media (width <= 38rem) {
+  .product-form {
+    width: 90vw;
+
+    &__grid {
+      grid-template-columns: 1fr;
+    }
+
+    &__field--wide {
+      grid-column: auto;
+    }
+  }
+}

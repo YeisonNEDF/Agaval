@@ -1,0 +1,29 @@
+<div class="app-shell">
+  <header class="app-shell__header">
+    <mat-toolbar class="app-shell__toolbar">
+      <a class="app-shell__brand" routerLink="/productos" aria-label="Ir al inventario">
+        <span class="app-shell__brand-mark" aria-hidden="true">A</span>
+        <span class="app-shell__brand-copy">
+          <strong>AGAVAL</strong>
+          <small>Control de inventario</small>
+        </span>
+      </a>
+
+      <nav class="app-shell__nav" aria-label="Navegación principal">
+        <a
+          mat-button
+          routerLink="/productos"
+          routerLinkActive="app-shell__nav-link--active"
+          class="app-shell__nav-link"
+        >
+          <mat-icon aria-hidden="true">inventory_2</mat-icon>
+          Productos
+        </a>
+      </nav>
+    </mat-toolbar>
+  </header>
+
+  <main class="app-shell__content">
+    <router-outlet />
+  </main>
+</div>

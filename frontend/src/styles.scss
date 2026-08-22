@@ -1,0 +1,77 @@
+@use '@angular/material' as mat;
+@import '@fontsource-variable/inter/index.css';
+@import 'material-symbols/outlined.css';
+
+:root {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Inter,
+      density: 0,
+    )
+  );
+
+  --color-primary: #2166c2;
+  --color-primary-dark: #174b92;
+  --color-primary-soft: #e9f1ff;
+  --color-accent: #0c8a73;
+  --color-accent-soft: #e7f7f2;
+  --color-danger: #c43d52;
+  --color-danger-soft: #fff0f2;
+  --color-warning: #b55f0a;
+  --color-warning-soft: #fff5e6;
+  --color-text: #172033;
+  --color-text-muted: #637087;
+  --color-surface: #ffffff;
+  --color-background: #f4f7fb;
+  --color-border: #dfe5ef;
+  --shadow-card: 0 1rem 2.5rem rgb(28 46 78 / 8%);
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html,
+body {
+  min-height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 5% -10%, rgb(58 128 226 / 12%), transparent 28rem),
+    var(--color-background);
+  color: var(--color-text);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.notification {
+  --mdc-snackbar-container-color: var(--color-text);
+  --mdc-snackbar-supporting-text-color: white;
+
+  &--success {
+    --mdc-snackbar-container-color: #146b5a;
+  }
+
+  &--error {
+    --mdc-snackbar-container-color: #9f2f42;
+  }
+}
+
+.mat-mdc-dialog-surface {
+  border-radius: 1.25rem;
+}

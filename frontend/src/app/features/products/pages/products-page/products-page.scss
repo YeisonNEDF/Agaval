@@ -1,0 +1,133 @@
+.products-page {
+  display: grid;
+  min-width: 0;
+  gap: 1.5rem;
+
+  > * {
+    min-width: 0;
+  }
+
+  &__primary-action {
+    min-height: 2.85rem;
+    padding-inline: 1.2rem;
+  }
+
+  &__metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.35fr;
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+
+  &__loading {
+    display: grid;
+    min-height: 20rem;
+    place-items: center;
+    align-content: center;
+    gap: 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1.15rem;
+    background: var(--color-surface);
+
+    strong {
+      margin-top: 0.4rem;
+    }
+
+    span {
+      color: var(--color-text-muted);
+      font-size: 0.82rem;
+    }
+  }
+
+  &__panel {
+    border: 1px solid var(--color-border);
+    border-radius: 1.15rem;
+    background: var(--color-surface);
+  }
+}
+
+.metric-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1.1rem;
+  background: color-mix(in srgb, var(--color-surface) 94%, var(--color-primary-soft));
+  box-shadow: 0 0.5rem 1.5rem rgb(28 46 78 / 4%);
+
+  &__icon {
+    display: grid;
+    width: 3rem;
+    height: 3rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 0.9rem;
+
+    &--primary {
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+    }
+
+    &--warning {
+      background: var(--color-warning-soft);
+      color: var(--color-warning);
+    }
+
+    &--success {
+      background: var(--color-accent-soft);
+      color: var(--color-accent);
+    }
+  }
+
+  div {
+    display: grid;
+    min-width: 0;
+  }
+
+  div > span {
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-weight: 650;
+    letter-spacing: 0.03em;
+  }
+
+  strong {
+    margin-top: 0.2rem;
+    overflow: hidden;
+    font-size: clamp(1.35rem, 2vw, 1.7rem);
+    letter-spacing: -0.035em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    margin-top: 0.25rem;
+    overflow: hidden;
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (width <= 56rem) {
+  .products-page__metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .metric-card--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (width <= 34rem) {
+  .products-page__metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-card--wide {
+    grid-column: auto;
+  }
+}

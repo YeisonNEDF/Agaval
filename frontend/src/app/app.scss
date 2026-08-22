@@ -1,0 +1,94 @@
+.app-shell {
+  min-height: 100%;
+
+  &__header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-bottom: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+    backdrop-filter: blur(16px);
+  }
+
+  &__toolbar {
+    width: min(calc(100% - 2rem), 78rem);
+    height: 4.5rem;
+    margin: 0 auto;
+    padding: 0;
+    background: transparent;
+  }
+
+  &__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  &__brand-mark {
+    display: grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    border-radius: 0.7rem;
+    background: linear-gradient(145deg, var(--color-primary), var(--color-primary-dark));
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 800;
+    box-shadow: 0 0.5rem 1rem rgb(25 75 155 / 18%);
+  }
+
+  &__brand-copy {
+    display: grid;
+    line-height: 1.05;
+
+    strong {
+      letter-spacing: 0.08em;
+    }
+
+    small {
+      margin-top: 0.25rem;
+      color: var(--color-text-muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.02em;
+    }
+  }
+
+  &__nav {
+    display: flex;
+    margin-left: auto;
+  }
+
+  &__nav-link {
+    color: var(--color-text-muted);
+
+    &--active {
+      color: var(--color-primary-dark);
+      background: var(--color-primary-soft);
+    }
+  }
+
+  &__content {
+    width: min(calc(100% - 2rem), 78rem);
+    margin: 0 auto;
+    padding: 2.5rem 0 4rem;
+  }
+}
+
+@media (width <= 42rem) {
+  .app-shell {
+    &__toolbar {
+      width: min(calc(100% - 1.25rem), 78rem);
+    }
+
+    &__brand-copy small {
+      display: none;
+    }
+
+    &__content {
+      width: min(calc(100% - 1.25rem), 78rem);
+      padding-top: 1.5rem;
+    }
+  }
+}

@@ -1,0 +1,40 @@
+<section class="product-filters" aria-label="Filtros del inventario">
+  <div class="product-filters__heading">
+    <span class="product-filters__icon" aria-hidden="true">
+      <mat-icon>tune</mat-icon>
+    </span>
+    <div>
+      <h2>Filtrar inventario</h2>
+      <p>Acote el listado por categoría o nivel de stock.</p>
+    </div>
+  </div>
+
+  <div class="product-filters__controls">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Categoría</mat-label>
+      <mat-select
+        [value]="filters().categoryId"
+        (selectionChange)="changeCategory($event.value)"
+      >
+        <mat-option [value]="null">Todas las categorías</mat-option>
+        @for (category of categories(); track category.id) {
+          <mat-option [value]="category.id">{{ category.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Estado de stock</mat-label>
+      <mat-select [value]="filters().stock" (selectionChange)="changeStock($event.value)">
+        <mat-option value="all">Todos los estados</mat-option>
+        <mat-option value="low">Stock bajo</mat-option>
+        <mat-option value="normal">Stock normal</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-button type="button" class="product-filters__clear" (click)="cleared.emit()">
+      <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
+      Limpiar
+    </button>
+  </div>
+</section>
