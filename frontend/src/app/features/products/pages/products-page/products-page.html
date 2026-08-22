@@ -1,8 +1,12 @@
 <div class="products-page">
   <app-page-header
-    eyebrow="Operación diaria"
-    title="Inventario de productos"
-    description="Controle existencias, precios y niveles mínimos desde una vista clara y accionable."
+    [eyebrow]="isLowStockView() ? 'Atención requerida' : 'Operación diaria'"
+    [title]="isLowStockView() ? 'Productos con stock bajo' : 'Inventario de productos'"
+    [description]="
+      isLowStockView()
+        ? 'Priorice las referencias que se encuentran por debajo de su nivel mínimo.'
+        : 'Controle existencias, precios y niveles mínimos desde una vista clara y accionable.'
+    "
   >
     <button
       mat-flat-button
@@ -28,16 +32,21 @@
       </div>
     </article>
 
-    <article class="metric-card">
+    <a
+      class="metric-card metric-card--interactive"
+      routerLink="/productos/stock-bajo"
+      aria-label="Consultar productos con stock bajo"
+    >
       <span class="metric-card__icon metric-card__icon--warning" aria-hidden="true">
         <mat-icon>production_quantity_limits</mat-icon>
       </span>
       <div>
         <span>Stock bajo</span>
         <strong>{{ store.lowStockCount() }}</strong>
-        <small>Requieren seguimiento</small>
+        <small>Requieren seguimiento · Ver detalle</small>
       </div>
-    </article>
+      <mat-icon class="metric-card__arrow" aria-hidden="true">arrow_forward</mat-icon>
+    </a>
 
     <article class="metric-card metric-card--wide">
       <span class="metric-card__icon metric-card__icon--success" aria-hidden="true">
@@ -76,8 +85,8 @@
     <app-product-filters
       [categories]="store.categories()"
       [filters]="store.filters()"
-      (filtersChanged)="store.setFilters($event)"
-      (cleared)="store.clearFilters()"
+      (filtersChanged)="setFilters($event)"
+      (cleared)="clearFilters()"
     />
 
     @if (store.filteredProducts().length > 0) {
@@ -99,7 +108,7 @@
           "
         >
           @if (store.hasActiveFilters()) {
-            <button mat-button type="button" (click)="store.clearFilters()">Limpiar filtros</button>
+            <button mat-button type="button" (click)="clearFilters()">Limpiar filtros</button>
           } @else {
             <button mat-flat-button type="button" (click)="openCreateDialog()">
               <mat-icon aria-hidden="true">add</mat-icon>

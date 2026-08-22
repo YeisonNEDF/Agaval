@@ -14,10 +14,25 @@
           mat-button
           routerLink="/productos"
           routerLinkActive="app-shell__nav-link--active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          ariaCurrentWhenActive="page"
+          aria-label="Ver todo el inventario"
           class="app-shell__nav-link"
         >
           <mat-icon aria-hidden="true">inventory_2</mat-icon>
-          Productos
+          <span class="app-shell__nav-label">Inventario</span>
+        </a>
+        <a
+          mat-button
+          routerLink="/productos/stock-bajo"
+          routerLinkActive="app-shell__nav-link--active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          ariaCurrentWhenActive="page"
+          aria-label="Ver productos con stock bajo"
+          class="app-shell__nav-link"
+        >
+          <mat-icon aria-hidden="true">production_quantity_limits</mat-icon>
+          <span class="app-shell__nav-label">Stock bajo</span>
         </a>
       </nav>
     </mat-toolbar>

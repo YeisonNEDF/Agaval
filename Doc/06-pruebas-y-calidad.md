@@ -45,14 +45,15 @@ npm run build
 npm audit
 ```
 
-Los 15 specs prueban componentes, shell y rutas HTTP de servicios. Se revisa además la ausencia de los anti-patrones expresos del estándar mediante búsqueda estática.
+Los 19 specs prueban componentes, shell, navegación visible, filtros sincronizados con URL y rutas HTTP de servicios. Se revisa además la ausencia de los anti-patrones expresos del estándar mediante búsqueda estática.
 
 ## Validación funcional en navegador
 
 Se ejecutó Angular contra una API local controlada con el mismo contrato HTTP y se comprobó:
 
 - render de dashboard, filtros y tabla;
-- iconografía y fuentes locales;
+- iconografía y fuente Manrope local;
+- navegación directa entre `/productos` y `/productos/stock-bajo`;
 - apertura y validación del formulario en viewport móvil;
 - creación de `Mouse ergonómico`, reflejada en el contador y la tabla;
 - entrada de una unidad, con cambio de stock de 8 a 9;
@@ -68,7 +69,7 @@ La ejecución real de la migración requiere una instancia SQL Server. En Develo
 La pasada final debe mantener:
 
 - Backend: 11 tests aprobados, 0 fallidos.
-- Frontend: 15 tests aprobados, 0 fallidos.
+- Frontend: 19 tests aprobados, 0 fallidos.
 - Build .NET Release: 0 warnings y 0 errores.
 - Lint Angular: sin hallazgos.
 - Build Angular production: exitoso.

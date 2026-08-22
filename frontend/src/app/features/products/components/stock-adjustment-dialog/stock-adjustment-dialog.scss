@@ -18,7 +18,8 @@
     h2 {
       margin: 0.25rem 0 0;
       padding: 0;
-      font-size: 1.45rem;
+      font-size: 1.5rem;
+      letter-spacing: -0.025em;
     }
 
     p {
@@ -33,7 +34,7 @@
     height: 3rem;
     flex: 0 0 auto;
     place-items: center;
-    border-radius: 0.9rem;
+    border-radius: 1rem;
     background: var(--color-primary-soft);
     color: var(--color-primary);
   }
@@ -45,8 +46,9 @@
     gap: 1rem;
     margin: 0.5rem 0 1.25rem;
     padding: 1rem 1.2rem;
-    border-radius: 1rem;
-    background: #f4f7fb;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-subtle);
 
     div {
       display: grid;
@@ -79,8 +81,9 @@
 
     mat-radio-button {
       padding: 0.7rem;
-      border: 1px solid var(--color-border);
-      border-radius: 0.85rem;
+      border: 1px solid var(--color-border-soft);
+      border-radius: var(--radius-md);
+      background: var(--color-surface-subtle);
     }
 
     strong,

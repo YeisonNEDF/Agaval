@@ -6,19 +6,22 @@
 .product-list {
   min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: 1.15rem;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-xl);
   background: var(--color-surface);
   box-shadow: var(--shadow-card);
 
   &__heading {
     display: flex;
     justify-content: space-between;
-    padding: 1.4rem 1.5rem 1rem;
+    padding: 1.55rem 1.6rem 1.1rem;
+    border-bottom: 1px solid var(--color-border-soft);
+    background: var(--color-surface-subtle);
 
     h2 {
       margin: 0;
-      font-size: 1rem;
+      font-size: 1.05rem;
+      letter-spacing: -0.015em;
     }
 
     p {
@@ -69,7 +72,7 @@
     height: 2.45rem;
     flex: 0 0 auto;
     place-items: center;
-    border-radius: 0.75rem;
+    border-radius: 0.9rem;
     background: var(--color-primary-soft);
     color: var(--color-primary);
 
@@ -80,7 +83,7 @@
 
   &__category {
     padding: 0.35rem 0.65rem;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-soft);
     border-radius: 99rem;
     color: var(--color-text-muted);
     font-size: 0.75rem;
@@ -89,7 +92,7 @@
 
   &__price {
     font-size: 0.86rem;
-    font-weight: 650;
+    font-weight: 680;
     white-space: nowrap;
   }
 
@@ -163,6 +166,7 @@
 
 .mat-mdc-header-cell {
   border-color: var(--color-border);
+  background: color-mix(in srgb, var(--color-surface-subtle) 92%, transparent);
   color: var(--color-text-muted);
   font-size: 0.7rem;
   font-weight: 700;
@@ -175,5 +179,5 @@
 }
 
 .mat-mdc-row:hover {
-  background: #f9fbfe;
+  background: var(--color-surface-subtle);
 }

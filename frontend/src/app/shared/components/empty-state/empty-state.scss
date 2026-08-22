@@ -14,7 +14,7 @@
     width: 4rem;
     height: 4rem;
     place-items: center;
-    border-radius: 1.2rem;
+    border-radius: 1.35rem;
     background: var(--color-primary-soft);
     color: var(--color-primary);
 
@@ -27,7 +27,8 @@
 
   &__title {
     margin: 1.25rem 0 0;
-    font-size: 1.25rem;
+    font-size: 1.3rem;
+    letter-spacing: -0.02em;
   }
 
   &__description {

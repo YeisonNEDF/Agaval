@@ -23,13 +23,15 @@ Es el composition root del cliente. Registra:
 
 Redirige la raíz a productos y carga la feature con `loadChildren`. El código de inventario queda en un chunk lazy separado.
 
+Las rutas visibles son `/productos`, para el inventario completo, y `/productos/stock-bajo`, para el seguimiento de existencias por debajo del mínimo. Ambas están expuestas en la navegación principal, admiten acceso directo y conservan filtros compartibles en la URL. Las rutas desconocidas vuelven al inventario.
+
 ### `app.ts`, `app.html`, `app.scss`
 
 Implementan únicamente el shell: cabecera de marca, navegación y `router-outlet`. La hoja SCSS usa BEM y adapta toolbar y márgenes a móvil; no conoce reglas del inventario.
 
 ### `styles.scss`
 
-Define el tema Material, tokens de color/sombra, tipografía Inter y Material Symbols empaquetados localmente, normalización global y variantes del snackbar. No usa estilos inline, `!important` ni `::ng-deep`.
+Define el tema Material, tokens de color, radios, bordes y sombras, tipografía variable Manrope y Material Symbols empaquetados localmente, normalización global y variantes del snackbar. La fuente se distribuye dentro del artefacto y no depende de un CDN. No usa estilos inline, `!important` ni `::ng-deep`.
 
 ## Core
 
@@ -112,11 +114,11 @@ Dialog tipado para entrada/salida. Calcula con `computed` el stock resultante, b
 
 ### `ProductsPageComponent`
 
-Es el contenedor de la feature. Conecta Store y componentes, abre dialogs y muestra las métricas. Orquesta intenciones de UI, pero las llamadas HTTP y el estado viven en servicios. El constructor solicita la carga inicial sin Zone.js.
+Es el contenedor de la feature. Conecta Store y componentes, abre dialogs, muestra las métricas y sincroniza los filtros con la URL. También adapta el encabezado para la vista de stock bajo. Orquesta intenciones de UI, pero las llamadas HTTP y el estado viven en servicios. El constructor solicita la carga inicial sin Zone.js.
 
 ### `routes.ts`
 
-Provee `ProductsStore`, `ProductsApiService` y `CategoriesApiService` en el límite lazy. Al abandonar la feature se descarta su estado; no se eleva innecesariamente al scope global.
+Declara las vistas `''` y `stock-bajo` reutilizando la misma página lazy. Provee `ProductsStore`, `ProductsApiService` y `CategoriesApiService` en el límite de la feature. Al abandonarla se descarta su estado; no se eleva innecesariamente al scope global.
 
 ## Templates y rendimiento
 
@@ -133,4 +135,4 @@ Cada componente posee un bloque BEM raíz y elementos con `__`. Los media querie
 
 ## Pruebas frontend
 
-Los specs cubren shell, shared, filtros, lista, formulario, ajuste, página y contratos HTTP de servicios. Cada TestBed activa explícitamente zoneless para reproducir la configuración real y verifica comportamiento observable, no detalles internos del framework.
+Los 19 specs cubren shell, shared, filtros, lista, formulario, ajuste, página, navegación visible y contratos HTTP de servicios. Cada TestBed activa explícitamente zoneless para reproducir la configuración real y verifica comportamiento observable, no detalles internos del framework.

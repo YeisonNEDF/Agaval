@@ -1,6 +1,13 @@
 @use '@angular/material' as mat;
-@import '@fontsource-variable/inter/index.css';
 @import 'material-symbols/outlined.css';
+
+@font-face {
+  font-family: 'Manrope Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('/media/manrope-latin-wght-normal.woff2') format('woff2-variations');
+}
 
 :root {
   @include mat.theme(
@@ -9,28 +16,37 @@
         primary: mat.$azure-palette,
         tertiary: mat.$blue-palette,
       ),
-      typography: Inter,
+      typography: 'Manrope Variable',
       density: 0,
     )
   );
 
-  --color-primary: #2166c2;
-  --color-primary-dark: #174b92;
-  --color-primary-soft: #e9f1ff;
-  --color-accent: #0c8a73;
-  --color-accent-soft: #e7f7f2;
-  --color-danger: #c43d52;
-  --color-danger-soft: #fff0f2;
-  --color-warning: #b55f0a;
-  --color-warning-soft: #fff5e6;
-  --color-text: #172033;
-  --color-text-muted: #637087;
+  --font-sans: 'Manrope Variable', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  --color-primary: #2f65b9;
+  --color-primary-dark: #214c8d;
+  --color-primary-soft: #edf3ff;
+  --color-accent: #16816f;
+  --color-accent-soft: #e9f7f3;
+  --color-danger: #bb4559;
+  --color-danger-soft: #fff1f3;
+  --color-warning: #aa6417;
+  --color-warning-soft: #fff6e9;
+  --color-text: #1d293b;
+  --color-text-muted: #68758a;
   --color-surface: #ffffff;
-  --color-background: #f4f7fb;
-  --color-border: #dfe5ef;
-  --shadow-card: 0 1rem 2.5rem rgb(28 46 78 / 8%);
+  --color-surface-subtle: #f8fafd;
+  --color-background: #f3f6fb;
+  --color-border: #dce4ef;
+  --color-border-soft: #e8edf4;
+  --radius-sm: 0.85rem;
+  --radius-md: 1.15rem;
+  --radius-lg: 1.45rem;
+  --radius-xl: 1.7rem;
+  --shadow-soft: 0 0.75rem 2rem rgb(31 52 84 / 6%);
+  --shadow-card: 0 1.25rem 3.5rem rgb(31 52 84 / 8%);
   color-scheme: light;
-  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
 }
 
 html,
@@ -40,12 +56,22 @@ body {
   overflow-x: hidden;
 }
 
+html {
+  font-family: var(--font-sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
 body {
   margin: 0;
   background:
-    radial-gradient(circle at 5% -10%, rgb(58 128 226 / 12%), transparent 28rem),
+    radial-gradient(circle at 7% -12%, rgb(66 126 211 / 14%), transparent 30rem),
+    radial-gradient(circle at 93% 4%, rgb(31 157 132 / 7%), transparent 24rem),
     var(--color-background);
   color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
 }
 
 button,
@@ -57,6 +83,27 @@ select {
 
 * {
   box-sizing: border-box;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+}
+
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  outline-offset: 3px;
+}
+
+.mat-mdc-button-base {
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-container-shape: var(--radius-md);
+  font-family: var(--font-sans);
 }
 
 .notification {
@@ -73,5 +120,7 @@ select {
 }
 
 .mat-mdc-dialog-surface {
-  border-radius: 1.25rem;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 1.75rem 5rem rgb(24 39 65 / 18%);
 }

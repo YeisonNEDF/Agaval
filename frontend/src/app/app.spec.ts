@@ -23,4 +23,24 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.app-shell__brand')?.textContent).toContain('AGAVAL');
   });
+
+  it('exposes inventory and low-stock navigation', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const links = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>(
+        '.app-shell__nav-link',
+      ),
+    );
+
+    expect(
+      links.map((link) =>
+        link.querySelector('.app-shell__nav-label')?.textContent?.trim(),
+      ),
+    ).toEqual(['Inventario', 'Stock bajo']);
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/productos',
+      '/productos/stock-bajo',
+    ]);
+  });
 });

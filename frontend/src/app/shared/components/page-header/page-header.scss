@@ -18,18 +18,19 @@
     display: block;
     margin-bottom: 0.6rem;
     color: var(--color-primary);
-    font-size: 0.75rem;
-    font-weight: 750;
+    font-size: 0.72rem;
+    font-weight: 760;
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
   &__title {
     margin: 0;
-    font-size: clamp(2rem, 4vw, 3.4rem);
-    font-weight: 750;
-    letter-spacing: -0.045em;
-    line-height: 1.05;
+    max-width: 48rem;
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 720;
+    letter-spacing: -0.04em;
+    line-height: 1.08;
   }
 
   &__description {
@@ -37,7 +38,7 @@
     margin: 0.9rem 0 0;
     color: var(--color-text-muted);
     font-size: 1rem;
-    line-height: 1.6;
+    line-height: 1.65;
   }
 
   &__actions {
