@@ -1,13 +1,13 @@
 services:
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    platform: linux/amd64
+    image: ${SQLSERVER_IMAGE:-mcr.microsoft.com/mssql/server:2022-latest}
+    platform: ${SQLSERVER_PLATFORM:-linux/amd64}
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_PID: Developer
+      MSSQL_PID: ${MSSQL_PID:-Developer}
       MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-Agaval_local_2026!}
     ports:
-      - "1433:1433"
+      - "${SQLSERVER_PORT:-1433}:1433"
     volumes:
       - sqlserver-data:/var/opt/mssql
     healthcheck:
@@ -29,11 +29,12 @@ services:
       sqlserver:
         condition: service_healthy
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__Database: Server=sqlserver,1433;Database=GestorInventarioDB;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Agaval_local_2026!};Encrypt=True;TrustServerCertificate=True
-      Database__ApplyMigrationsOnStartup: "true"
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__Database: Server=sqlserver,1433;Database=${DATABASE_NAME:-GestorInventarioDB};User Id=sa;Password=${MSSQL_SA_PASSWORD:-Agaval_local_2026!};Encrypt=True;TrustServerCertificate=True
+      Database__ApplyMigrationsOnStartup: ${APPLY_MIGRATIONS_ON_STARTUP:-true}
+      Cors__AllowedOrigins__0: http://${PUBLIC_HOST:-localhost}:${FRONTEND_PORT:-4200}
     ports:
-      - "5100:8080"
+      - "${BACKEND_PORT:-5100}:8080"
     restart: unless-stopped
 
   agaval-frontend:
@@ -42,7 +43,7 @@ services:
     depends_on:
       - agaval-backend
     ports:
-      - "4200:8080"
+      - "${FRONTEND_PORT:-4200}:8080"
     restart: unless-stopped
 
 volumes:

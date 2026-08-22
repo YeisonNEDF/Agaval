@@ -29,9 +29,31 @@ fail() {
 }
 
 require_docker() {
-  command -v docker >/dev/null 2>&1 || fail "Docker no está instalado o no está disponible en PATH."
+  command -v docker >/dev/null 2>&1 || fail "Docker no está instalado. Consulte la sección 'Requisito único' del README."
   docker compose version >/dev/null 2>&1 || fail "Docker Compose no está disponible."
-  docker info >/dev/null 2>&1 || fail "Docker Desktop no está iniciado."
+
+  if ! docker info >/dev/null 2>&1; then
+    if [ "$(uname -s)" = "Darwin" ] && [ -d "/Applications/Docker.app" ]; then
+      printf 'Iniciando Docker Desktop'
+      open -a Docker
+      attempt=1
+
+      while [ "$attempt" -le 60 ]; do
+        if docker info >/dev/null 2>&1; then
+          printf ' listo.\n'
+          return 0
+        fi
+
+        printf '.'
+        sleep 2
+        attempt=$((attempt + 1))
+      done
+
+      printf '\n' >&2
+    fi
+
+    fail "Docker está instalado, pero el motor no está disponible. Inicie Docker Desktop e intente nuevamente."
+  fi
 }
 
 prepare_environment() {
@@ -44,6 +66,18 @@ prepare_environment() {
   fi
 
   docker compose config --quiet
+}
+
+read_env() {
+  key="$1"
+  fallback="$2"
+  value=$(awk -F= -v requested_key="$key" '$1 == requested_key { sub(/^[^=]*=/, ""); print; exit }' .env)
+
+  if [ -z "$value" ]; then
+    value="$fallback"
+  fi
+
+  printf '%s' "$value"
 }
 
 wait_for_url() {
@@ -128,6 +162,10 @@ case "$ACTION" in
   start)
     prepare_environment
 
+    frontend_port=${FRONTEND_PORT:-$(read_env "FRONTEND_PORT" "4200")}
+    backend_port=${BACKEND_PORT:-$(read_env "BACKEND_PORT" "5100")}
+    public_host=${PUBLIC_HOST:-$(read_env "PUBLIC_HOST" "localhost")}
+
     if [ "$DETACHED" = "true" ] && [ "$BUILD" = "true" ]; then
       docker compose up --detach --build
     elif [ "$DETACHED" = "true" ]; then
@@ -139,13 +177,13 @@ case "$ACTION" in
     fi
 
     if [ "$DETACHED" = "true" ]; then
-      wait_for_url "http://localhost:5100/health" "la API" 90
-      wait_for_url "http://localhost:4200" "el frontend" 30
+      wait_for_url "http://localhost:${backend_port}/health" "la API" 90
+      wait_for_url "http://localhost:${frontend_port}" "el frontend" 30
       docker compose ps
 
       printf '\nAGAVAL está disponible en:\n'
-      printf '  Frontend: http://localhost:4200\n'
-      printf '  API:      http://localhost:5100\n'
+      printf '  Frontend: http://%s:%s\n' "$public_host" "$frontend_port"
+      printf '  API:      http://%s:%s\n' "$public_host" "$backend_port"
       printf '\nUse ./start.sh --logs para ver los logs y ./start.sh --stop para detenerlo.\n'
     fi
     ;;

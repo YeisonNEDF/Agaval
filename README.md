@@ -27,7 +27,14 @@ Agaval/
 
 ## Opción recomendada: ejecutar todo con Docker
 
-Requiere Docker Desktop. SQL Server, la API y el frontend se levantan juntos:
+### Requisito único
+
+Solo se necesita Docker con el complemento Compose:
+
+- macOS y Windows: [Docker Desktop](https://docs.docker.com/get-started/get-docker/).
+- Linux: [Docker Engine](https://docs.docker.com/engine/install/) y el plugin Docker Compose.
+
+No es necesario instalar .NET, Node.js, npm ni SQL Server en la máquina. Después de instalar Docker, SQL Server, la API y el frontend se levantan juntos con un solo comando:
 
 > La imagen oficial de SQL Server es x86-64. En Apple Silicon, Compose solicita `linux/amd64`; Docker Desktop puede emularla, pero será más lenta y Microsoft no considera ese modo una plataforma soportada. Si falla, use una instancia SQL Server remota o una máquina x86-64.
 
@@ -44,6 +51,27 @@ El script crea `.env` desde `.env.example` cuando hace falta, valida Docker Comp
 ./start.sh --foreground  # ejecutar en primer plano
 ./start.sh --no-build    # reutilizar imágenes existentes
 ```
+
+### Configuración completa
+
+`.env.example` contiene todos los valores necesarios y funciona sin modificaciones. En el primer inicio se copia automáticamente como `.env`:
+
+| Variable | Predeterminado | Uso |
+| --- | --- | --- |
+| `COMPOSE_PROJECT_NAME` | `agaval` | Agrupa contenedores, red y volumen. |
+| `FRONTEND_PORT` | `4200` | Puerto público de Angular/Nginx. |
+| `BACKEND_PORT` | `5100` | Puerto público de la API. |
+| `SQLSERVER_PORT` | `1433` | Puerto público de SQL Server. |
+| `SQLSERVER_IMAGE` | SQL Server 2022 | Imagen oficial de la base. |
+| `SQLSERVER_PLATFORM` | `linux/amd64` | Arquitectura requerida por SQL Server. |
+| `MSSQL_PID` | `Developer` | Edición gratuita para desarrollo. |
+| `MSSQL_SA_PASSWORD` | clave local de ejemplo | Credencial exclusiva del entorno local. |
+| `DATABASE_NAME` | `GestorInventarioDB` | Base creada por las migraciones. |
+| `ASPNETCORE_ENVIRONMENT` | `Production` | Entorno de ejecución de la API. |
+| `APPLY_MIGRATIONS_ON_STARTUP` | `true` | Crea esquema y seed automáticamente. |
+| `PUBLIC_HOST` | `localhost` | Host mostrado al finalizar el inicio. |
+
+Para cambiar un puerto o contraseña solo hay que editar `.env`. Ese archivo es local y no se versiona; `.env.example` es la plantilla pública reproducible.
 
 - Frontend: `http://localhost:4200`
 - API: `http://localhost:5100`
