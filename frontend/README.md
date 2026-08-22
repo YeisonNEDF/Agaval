@@ -15,4 +15,4 @@ npm test -- --watch=false --browsers=ChromeHeadless
 npm run build
 ```
 
-Consulte la documentación principal en [`../README.md`](../README.md) y el desglose de la UI en [`../Doc/03-frontend.md`](../Doc/03-frontend.md).
+Consulte el desglose técnico de la interfaz en [`Doc/frontend.md`](Doc/frontend.md).
