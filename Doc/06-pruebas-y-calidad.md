@@ -20,6 +20,9 @@ dotnet format Agaval.Inventory.slnx --verify-no-changes --no-restore
 dotnet build Agaval.Inventory.slnx --configuration Release
 dotnet test Agaval.Inventory.slnx --configuration Release --no-build
 dotnet list Agaval.Inventory.slnx package --vulnerable --include-transitive
+dotnet ef migrations has-pending-model-changes \
+  --project src/Agaval.Inventory.Infrastructure \
+  --startup-project src/Agaval.Inventory.Api
 ```
 
 Cobertura de comportamiento:
@@ -58,7 +61,7 @@ Se ejecutó Angular contra una API local controlada con el mismo contrato HTTP y
 - layout de escritorio;
 - consola sin errores ni warnings durante el flujo.
 
-La conexión real con Supabase se valida una vez proporcionada la cadena de conexión y aplicada la migración.
+La ejecución real de la migración requiere una instancia SQL Server. En Development y Compose se aplica automáticamente cuando el motor está disponible.
 
 ## Resultado registrado
 
@@ -70,6 +73,8 @@ La pasada final debe mantener:
 - Lint Angular: sin hallazgos.
 - Build Angular production: exitoso.
 - Dependencias: sin vulnerabilidades conocidas reportadas por los gestores.
+- Modelo EF Core: sin cambios pendientes frente a la migración SQL Server.
+- Smoke test de API: `/health` y OpenAPI respondieron HTTP 200 con migraciones desactivadas.
 
 Los seis archivos YAML de CI, Compose y Kubernetes fueron parseados correctamente. No se construyeron las imágenes en esta estación porque el ejecutable Docker no está instalado; los builds nativos de los dos artefactos sí se completaron.
 
@@ -77,8 +82,8 @@ Si una ejecución posterior cambia estos valores, el resultado de CI es la fuent
 
 ## Casos siguientes recomendados
 
-- pruebas de integración API + PostgreSQL efímero;
+- pruebas de integración API + SQL Server efímero;
 - test E2E Playwright en CI;
 - concurrencia optimista al ajustar stock;
 - cobertura de actualización y eliminación en Application;
-- prueba del pipeline de migración contra un proyecto Supabase de staging.
+- prueba del migration bundle contra una instancia SQL Server de staging.

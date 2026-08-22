@@ -8,12 +8,13 @@ public sealed class PersistenceContextFactory : IDesignTimeDbContextFactory<Pers
     public PersistenceContext CreateDbContext(string[] args)
     {
         var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Database")
-            ?? "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres";
+            ?? "Server=localhost,1433;Database=GestorInventarioDB;User Id=sa;" +
+            "Password=Agaval_local_2026!;Encrypt=True;TrustServerCertificate=True";
 
         var options = new DbContextOptionsBuilder<PersistenceContext>()
-            .UseNpgsql(
+            .UseSqlServer(
                 connectionString,
-                npgsql => npgsql.MigrationsAssembly(typeof(PersistenceContext).Assembly.FullName))
+                sqlServer => sqlServer.MigrationsAssembly(typeof(PersistenceContext).Assembly.FullName))
             .Options;
 
         return new PersistenceContext(options);

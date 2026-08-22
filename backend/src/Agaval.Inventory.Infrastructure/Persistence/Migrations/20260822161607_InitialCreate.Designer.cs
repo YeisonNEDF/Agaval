@@ -3,16 +3,16 @@ using System;
 using Agaval.Inventory.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace Agaval.Inventory.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(PersistenceContext))]
-    [Migration("20260822153207_InitialCreate")]
+    [Migration("20260822161607_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -21,29 +21,29 @@ namespace Agaval.Inventory.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.11")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("Agaval.Inventory.Domain.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
+                        .HasColumnType("bit")
                         .HasDefaultValue(true)
                         .HasColumnName("Activo");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnName("Nombre");
 
                     b.HasKey("Id")
@@ -80,32 +80,34 @@ namespace Agaval.Inventory.Infrastructure.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Observation")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("Observacion");
 
-                    b.Property<DateTimeOffset>("OccurredAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("Fecha");
+                    b.Property<DateTime>("OccurredAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("Fecha")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("integer")
+                        .HasColumnType("int")
                         .HasColumnName("ProductoId");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("integer")
+                        .HasColumnType("int")
                         .HasColumnName("Cantidad");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)")
+                        .HasColumnType("nvarchar(10)")
                         .HasColumnName("TipoMovimiento");
 
                     b.HasKey("Id")
@@ -116,9 +118,9 @@ namespace Agaval.Inventory.Infrastructure.Persistence.Migrations
 
                     b.ToTable("MovimientosInventario", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Movimientos_Cantidad", "\"Cantidad\" > 0");
+                            t.HasCheckConstraint("CK_Movimientos_Cantidad", "[Cantidad] > 0");
 
-                            t.HasCheckConstraint("CK_Movimientos_Tipo", "\"TipoMovimiento\" IN ('ENTRADA', 'SALIDA')");
+                            t.HasCheckConstraint("CK_Movimientos_Tipo", "[TipoMovimiento] IN ('ENTRADA', 'SALIDA')");
                         });
                 });
 
@@ -126,44 +128,46 @@ namespace Agaval.Inventory.Infrastructure.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CategoryId")
-                        .HasColumnType("integer")
+                        .HasColumnType("int")
                         .HasColumnName("CategoriaId");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("FechaCreacion");
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("FechaCreacion")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasColumnType("nvarchar(500)")
                         .HasColumnName("Descripcion");
 
                     b.Property<int>("MinimumStock")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("int")
                         .HasDefaultValue(5)
                         .HasColumnName("StockMinimo");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
+                        .HasColumnType("nvarchar(150)")
                         .HasColumnName("Nombre");
 
                     b.Property<decimal>("Price")
                         .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)")
+                        .HasColumnType("decimal(10,2)")
                         .HasColumnName("Precio");
 
                     b.Property<int>("Stock")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("int")
                         .HasDefaultValue(0)
                         .HasColumnName("Stock");
 
@@ -178,11 +182,11 @@ namespace Agaval.Inventory.Infrastructure.Persistence.Migrations
 
                     b.ToTable("Productos", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Productos_Precio", "\"Precio\" > 0");
+                            t.HasCheckConstraint("CK_Productos_Precio", "[Precio] > 0");
 
-                            t.HasCheckConstraint("CK_Productos_Stock", "\"Stock\" >= 0");
+                            t.HasCheckConstraint("CK_Productos_Stock", "[Stock] >= 0");
 
-                            t.HasCheckConstraint("CK_Productos_StockMinimo", "\"StockMinimo\" >= 0");
+                            t.HasCheckConstraint("CK_Productos_StockMinimo", "[StockMinimo] >= 0");
                         });
 
                     b.HasData(
@@ -190,7 +194,7 @@ namespace Agaval.Inventory.Infrastructure.Persistence.Migrations
                         {
                             Id = 1,
                             CategoryId = 1,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTime(2026, 8, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Teclado compacto para estaciones de trabajo.",
                             MinimumStock = 5,
                             Name = "Teclado mecánico",
@@ -201,7 +205,7 @@ namespace Agaval.Inventory.Infrastructure.Persistence.Migrations
                         {
                             Id = 2,
                             CategoryId = 2,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTime(2026, 8, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Papel blanco de 75 gramos, paquete de 500 hojas.",
                             MinimumStock = 8,
                             Name = "Resma de papel carta",

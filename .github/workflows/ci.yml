@@ -21,9 +21,16 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet restore Agaval.Inventory.slnx
+      - run: dotnet tool restore
       - run: dotnet format Agaval.Inventory.slnx --verify-no-changes --no-restore
       - run: dotnet build Agaval.Inventory.slnx --configuration Release --no-restore
       - run: dotnet test Agaval.Inventory.slnx --configuration Release --no-build
+      - run: >-
+          dotnet ef migrations has-pending-model-changes
+          --project src/Agaval.Inventory.Infrastructure
+          --startup-project src/Agaval.Inventory.Api
+          --configuration Release
+          --no-build
       - run: dotnet list Agaval.Inventory.slnx package --vulnerable --include-transitive
 
   frontend:

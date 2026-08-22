@@ -112,7 +112,7 @@ Los mapeos son explícitos: un cambio de convención de EF no modifica silencios
 
 ### Composición y diseño
 
-`DependencyInjection.cs` valida que exista `ConnectionStrings:Database`, configura Npgsql y registra repositorios scoped. `PersistenceContextFactory` permite a `dotnet ef` construir el contexto durante diseño sin arrancar la API.
+`DependencyInjection.cs` valida que exista `ConnectionStrings:Database`, configura SQL Server con reintentos transitorios y registra repositorios scoped. `PersistenceContextFactory` permite a `dotnet ef` construir el contexto durante diseño sin arrancar la API.
 
 ### Migración y SQL
 
@@ -149,7 +149,7 @@ Convierte validaciones e invariantes de dominio a 400, ausencias a 404, conflict
 ### Infraestructura HTTP
 
 - `CorsPolicies.cs` nombra la política global.
-- `DatabaseInitializationExtensions.cs` permite migrar al inicio solo si la configuración lo autoriza; por defecto está desactivado.
+- `DatabaseInitializationExtensions.cs` detecta migraciones pendientes y ejecuta `MigrateAsync` cuando el ambiente lo autoriza. Está activo en Development y Compose, y desactivado en producción por defecto.
 - `Program.cs` es el composition root: registra capas, JSON enums, Problem Details, Swagger, health, CORS y controllers.
 - `Agaval.Inventory.Api.http` contiene llamadas manuales reproducibles.
 

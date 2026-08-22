@@ -14,9 +14,9 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             "Productos",
             tableBuilder =>
             {
-                tableBuilder.HasCheckConstraint("CK_Productos_Precio", "\"Precio\" > 0");
-                tableBuilder.HasCheckConstraint("CK_Productos_Stock", "\"Stock\" >= 0");
-                tableBuilder.HasCheckConstraint("CK_Productos_StockMinimo", "\"StockMinimo\" >= 0");
+                tableBuilder.HasCheckConstraint("CK_Productos_Precio", "[Precio] > 0");
+                tableBuilder.HasCheckConstraint("CK_Productos_Stock", "[Stock] >= 0");
+                tableBuilder.HasCheckConstraint("CK_Productos_StockMinimo", "[StockMinimo] >= 0");
             });
 
         builder.HasKey(product => product.Id).HasName("PK_Productos");
@@ -55,7 +55,11 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(product => product.CreatedAt)
             .HasColumnName("FechaCreacion")
-            .HasColumnType("timestamp with time zone")
+            .HasConversion(
+                createdAt => createdAt.UtcDateTime,
+                storedAt => new DateTimeOffset(DateTime.SpecifyKind(storedAt, DateTimeKind.Utc)))
+            .HasColumnType("datetime2")
+            .HasDefaultValueSql("SYSUTCDATETIME()")
             .IsRequired();
 
         builder.Ignore(product => product.IsLowStock);

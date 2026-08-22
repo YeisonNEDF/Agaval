@@ -1,11 +1,37 @@
 services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-Agaval_local_2026!}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
   agaval-backend:
     build:
       context: ./backend
+    depends_on:
+      sqlserver:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__Database: ${AGAVAL_DATABASE_CONNECTION:?Define AGAVAL_DATABASE_CONNECTION}
-      Database__ApplyMigrationsOnStartup: "false"
+      ConnectionStrings__Database: Server=sqlserver,1433;Database=GestorInventarioDB;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Agaval_local_2026!};Encrypt=True;TrustServerCertificate=True
+      Database__ApplyMigrationsOnStartup: "true"
     ports:
       - "5100:8080"
     restart: unless-stopped
@@ -18,3 +44,6 @@ services:
     ports:
       - "4200:8080"
     restart: unless-stopped
+
+volumes:
+  sqlserver-data:

@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -18,10 +17,10 @@ namespace Agaval.Inventory.Infrastructure.Persistence.Migrations
                 name: "Categorias",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Nombre = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Activo = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
                 },
                 constraints: table =>
                 {
@@ -32,22 +31,22 @@ namespace Agaval.Inventory.Infrastructure.Persistence.Migrations
                 name: "Productos",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Nombre = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
-                    Descripcion = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    Precio = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: false),
-                    Stock = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    StockMinimo = table.Column<int>(type: "integer", nullable: false, defaultValue: 5),
-                    CategoriaId = table.Column<int>(type: "integer", nullable: false),
-                    FechaCreacion = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Precio = table.Column<decimal>(type: "decimal(10,2)", precision: 10, scale: 2, nullable: false),
+                    Stock = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    StockMinimo = table.Column<int>(type: "int", nullable: false, defaultValue: 5),
+                    CategoriaId = table.Column<int>(type: "int", nullable: false),
+                    FechaCreacion = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Productos", x => x.Id);
-                    table.CheckConstraint("CK_Productos_Precio", "\"Precio\" > 0");
-                    table.CheckConstraint("CK_Productos_Stock", "\"Stock\" >= 0");
-                    table.CheckConstraint("CK_Productos_StockMinimo", "\"StockMinimo\" >= 0");
+                    table.CheckConstraint("CK_Productos_Precio", "[Precio] > 0");
+                    table.CheckConstraint("CK_Productos_Stock", "[Stock] >= 0");
+                    table.CheckConstraint("CK_Productos_StockMinimo", "[StockMinimo] >= 0");
                     table.ForeignKey(
                         name: "FK_Productos_Categorias",
                         column: x => x.CategoriaId,
@@ -60,19 +59,19 @@ namespace Agaval.Inventory.Infrastructure.Persistence.Migrations
                 name: "MovimientosInventario",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ProductoId = table.Column<int>(type: "integer", nullable: false),
-                    TipoMovimiento = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
-                    Cantidad = table.Column<int>(type: "integer", nullable: false),
-                    Fecha = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Observacion = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProductoId = table.Column<int>(type: "int", nullable: false),
+                    TipoMovimiento = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    Cantidad = table.Column<int>(type: "int", nullable: false),
+                    Fecha = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
+                    Observacion = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MovimientosInventario", x => x.Id);
-                    table.CheckConstraint("CK_Movimientos_Cantidad", "\"Cantidad\" > 0");
-                    table.CheckConstraint("CK_Movimientos_Tipo", "\"TipoMovimiento\" IN ('ENTRADA', 'SALIDA')");
+                    table.CheckConstraint("CK_Movimientos_Cantidad", "[Cantidad] > 0");
+                    table.CheckConstraint("CK_Movimientos_Tipo", "[TipoMovimiento] IN ('ENTRADA', 'SALIDA')");
                     table.ForeignKey(
                         name: "FK_Movimientos_Productos",
                         column: x => x.ProductoId,
@@ -96,8 +95,8 @@ namespace Agaval.Inventory.Infrastructure.Persistence.Migrations
                 columns: new[] { "Id", "CategoriaId", "FechaCreacion", "Descripcion", "StockMinimo", "Nombre", "Precio", "Stock" },
                 values: new object[,]
                 {
-                    { 1, 1, new DateTimeOffset(new DateTime(2026, 8, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Teclado compacto para estaciones de trabajo.", 5, "Teclado mecánico", 249900m, 4 },
-                    { 2, 2, new DateTimeOffset(new DateTime(2026, 8, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Papel blanco de 75 gramos, paquete de 500 hojas.", 8, "Resma de papel carta", 24500m, 18 }
+                    { 1, 1, new DateTime(2026, 8, 1, 12, 0, 0, 0, DateTimeKind.Utc), "Teclado compacto para estaciones de trabajo.", 5, "Teclado mecánico", 249900m, 4 },
+                    { 2, 2, new DateTime(2026, 8, 1, 12, 0, 0, 0, DateTimeKind.Utc), "Papel blanco de 75 gramos, paquete de 500 hojas.", 8, "Resma de papel carta", 24500m, 18 }
                 });
 
             migrationBuilder.CreateIndex(

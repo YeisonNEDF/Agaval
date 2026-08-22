@@ -13,10 +13,10 @@ internal sealed class InventoryMovementConfiguration : IEntityTypeConfiguration<
             "MovimientosInventario",
             tableBuilder =>
             {
-                tableBuilder.HasCheckConstraint("CK_Movimientos_Cantidad", "\"Cantidad\" > 0");
+                tableBuilder.HasCheckConstraint("CK_Movimientos_Cantidad", "[Cantidad] > 0");
                 tableBuilder.HasCheckConstraint(
                     "CK_Movimientos_Tipo",
-                    "\"TipoMovimiento\" IN ('ENTRADA', 'SALIDA')");
+                    "[TipoMovimiento] IN ('ENTRADA', 'SALIDA')");
             });
 
         builder.HasKey(movement => movement.Id).HasName("PK_MovimientosInventario");
@@ -43,7 +43,11 @@ internal sealed class InventoryMovementConfiguration : IEntityTypeConfiguration<
 
         builder.Property(movement => movement.OccurredAt)
             .HasColumnName("Fecha")
-            .HasColumnType("timestamp with time zone")
+            .HasConversion(
+                occurredAt => occurredAt.UtcDateTime,
+                storedAt => new DateTimeOffset(DateTime.SpecifyKind(storedAt, DateTimeKind.Utc)))
+            .HasColumnType("datetime2")
+            .HasDefaultValueSql("SYSUTCDATETIME()")
             .IsRequired();
 
         builder.Property(movement => movement.Observation)

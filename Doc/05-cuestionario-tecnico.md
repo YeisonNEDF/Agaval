@@ -6,7 +6,7 @@
 
 Porque el controlador pertenece a la capa de presentación: su responsabilidad es traducir HTTP, no decidir reglas ni coordinar persistencia. Al enviar un Command o Query, el caso de uso queda disponible desde cualquier entrada —HTTP, worker, CLI o test— sin duplicar comportamiento.
 
-Se gana separación de responsabilidades, inversión de dependencias y testabilidad. Application depende de puertos, no de EF Core; por eso una prueba puede sustituir repositorios sin levantar PostgreSQL. También se centralizan validación, autorización futura, logging y transacciones mediante behaviors. El DbContext directo parece más corto al principio, pero acopla contrato HTTP, reglas y tecnología; cada cambio aumenta el controlador y hace más difícil sustituir EF, probar casos límite o reutilizar el caso de uso.
+Se gana separación de responsabilidades, inversión de dependencias y testabilidad. Application depende de puertos, no de EF Core; por eso una prueba puede sustituir repositorios sin levantar SQL Server. También se centralizan validación, autorización futura, logging y transacciones mediante behaviors. El DbContext directo parece más corto al principio, pero acopla contrato HTTP, reglas y tecnología; cada cambio aumenta el controlador y hace más difícil sustituir EF, probar casos límite o reutilizar el caso de uso.
 
 ## Backend 2
 

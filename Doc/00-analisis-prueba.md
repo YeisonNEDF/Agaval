@@ -59,7 +59,7 @@ El texto blanco detectado corresponde exclusivamente a encabezados visibles de t
 
 ## Decisiones y supuestos explícitos
 
-1. **PostgreSQL/Supabase:** aunque la prueba muestra SQL Server, el proyecto usa PostgreSQL porque esa fue la decisión indicada para este trabajo. El cambio queda confinado a Infrastructure y conserva nombres, restricciones y precisión equivalentes.
+1. **SQL Server:** se usa el proveedor oficial de EF Core y una migración equivalente al script del enunciado. En desarrollo, la API crea y actualiza automáticamente la base configurada.
 2. **Idioma del código:** namespaces, tipos y miembros se escriben en inglés por consistencia técnica; rutas HTTP y nombres físicos de tablas se conservan en español según el enunciado.
 3. **Stock inicial:** crear o editar un producto puede fijar el stock; los cambios operativos posteriores pasan por el endpoint de ajustes y generan trazabilidad.
 4. **Eliminación:** es física, como pide un CRUD sin especificar borrado lógico. La categoría solo se consulta porque su CRUD es opcional.

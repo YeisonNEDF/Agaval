@@ -17,17 +17,17 @@ public static class DependencyInjection
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException(
-                "Configure la conexión a Supabase en 'ConnectionStrings:Database' o en la variable " +
+                "Configure la conexión a SQL Server en 'ConnectionStrings:Database' o en la variable " +
                 "'ConnectionStrings__Database'.");
         }
 
         services.AddDbContext<PersistenceContext>(options =>
-            options.UseNpgsql(
+            options.UseSqlServer(
                 connectionString,
-                npgsql =>
+                sqlServer =>
                 {
-                    npgsql.MigrationsAssembly(typeof(PersistenceContext).Assembly.FullName);
-                    npgsql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), errorCodesToAdd: null);
+                    sqlServer.MigrationsAssembly(typeof(PersistenceContext).Assembly.FullName);
+                    sqlServer.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), errorNumbersToAdd: null);
                 }));
 
         services.AddScoped<IProductRepository, ProductRepository>();

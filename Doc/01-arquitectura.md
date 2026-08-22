@@ -9,7 +9,7 @@ flowchart LR
     APP --> DOMAIN[Domain]
     INFRA[Infrastructure EF Core] --> APP
     INFRA --> DOMAIN
-    INFRA -->|Npgsql| DB[(Supabase PostgreSQL)]
+    INFRA -->|EF Core SQL Server| DB[(GestorInventarioDB)]
 ```
 
 Domain no referencia ninguna otra capa. Application solo conoce Domain y declara los puertos. Infrastructure implementa esos puertos. API compone las dependencias y traduce HTTP a Commands/Queries.
@@ -24,7 +24,7 @@ sequenceDiagram
     participant M as MediatR
     participant H as CommandHandler
     participant R as Repository
-    participant DB as Supabase
+    participant DB as SQL Server
     U->>C: Envía formulario tipado
     C->>API: POST /api/productos
     API->>M: CreateProductCommand
@@ -50,7 +50,7 @@ Organizada por caso de uso. Cada vertical slice contiene Command/Query, Validato
 
 ### Infrastructure
 
-Configura EF Core con Npgsql, mapeos explícitos, seeds, índices, restricciones y repositorios. Es el único lugar que conoce PostgreSQL. `PersistenceContext` también implementa `IUnitOfWork` para que cada Handler confirme una unidad atómica.
+Configura EF Core con SQL Server, mapeos explícitos, seeds, índices, restricciones y repositorios. Es el único lugar que conoce el motor. `PersistenceContext` también implementa `IUnitOfWork` para que cada Handler confirme una unidad atómica.
 
 ### API
 
@@ -88,7 +88,7 @@ Los nombres físicos permanecen `Categorias`, `Productos` y `MovimientosInventar
 ## Despliegue
 
 - Dockerfiles multi-stage separan compilación de runtime.
-- Docker Compose reproduce el sistema local con Supabase externo.
+- Docker Compose levanta SQL Server, espera su health check y luego inicia la aplicación.
 - Kubernetes incluye Deployment, Service, ConfigMap, Secret de ejemplo, probes y límites de recursos.
 - CI compila y prueba backend y frontend en jobs independientes.
 
