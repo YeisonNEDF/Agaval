@@ -99,7 +99,7 @@ Componente presentacional. Recibe categorías y filtros, y emite cambios tipados
 
 ### `ProductListComponent`
 
-Recibe productos y emite tres intenciones: ajustar, editar y eliminar. Renderiza una tabla Material, chips de categoría/estado, formato monetario e indicador visual. La tabla dispone de scroll horizontal propio en pantallas angostas para no romper el layout general.
+Recibe productos y emite tres intenciones: ajustar, editar y eliminar. En escritorio renderiza una tabla Material con chips de categoría/estado, formato monetario e indicador visual. En pantallas angostas las mismas filas se reorganizan como tarjetas de dos columnas con etiquetas explícitas y acciones visibles; no depende de scroll horizontal.
 
 ### `ProductFormComponent`
 
@@ -109,13 +109,15 @@ Dialog de creación/edición con un `FormGroup` estrictamente tipado y controles
 - patch inicial en modo edición;
 - normalización del valor antes de cerrar;
 - errores accesibles y botón deshabilitado mientras el formulario sea inválido;
-- layout responsive en archivo SCSS independiente.
+- distribución compacta de 12 columnas que aprovecha el ancho en escritorio;
+- tamaño del panel limitado al viewport y contenido sin desbordamiento horizontal;
+- cierre explícito, acciones consistentes y layout responsive en archivo SCSS independiente.
 
 La validación cliente mejora UX; la API sigue siendo la autoridad.
 
 ### `StockAdjustmentDialogComponent`
 
-Dialog tipado para entrada/salida. Calcula con `computed` el stock resultante, bloquea salidas imposibles y captura una observación opcional. Solo devuelve el payload; el Page decide ejecutar el caso de uso.
+Dialog tipado para entrada/salida. Calcula con `computed` el stock resultante, bloquea salidas imposibles y captura una observación opcional. Comparte el tratamiento responsive del formulario: encabezado, cierre visible, panel limitado al viewport y acciones siempre accesibles. Solo devuelve el payload; el Page decide ejecutar el caso de uso.
 
 ### `ProductsPageComponent`
 
@@ -140,4 +142,4 @@ Cada componente posee un bloque BEM raíz y elementos con `__`. Los media querie
 
 ## Pruebas frontend
 
-Los 19 specs cubren shell, shared, filtros, lista, formulario, ajuste, página, rutas visibles y contratos HTTP de servicios. Cada TestBed activa explícitamente zoneless para reproducir la configuración real y verifica comportamiento observable, no detalles internos del framework.
+Los 20 specs cubren shell, shared, filtros, lista, formulario, ajuste, página, configuración responsive de diálogos, rutas visibles y contratos HTTP de servicios. Cada TestBed activa explícitamente zoneless para reproducir la configuración real y verifica comportamiento observable, no detalles internos del framework.

@@ -46,7 +46,7 @@ npm run build
 npm audit
 ```
 
-Los 19 specs prueban componentes, shell, navegación visible, filtros sincronizados con URL y rutas HTTP de servicios. Se revisa además la ausencia de los anti-patrones expresos del estándar mediante búsqueda estática.
+Los 20 specs prueban componentes, shell, navegación visible, configuración de diálogos dentro del viewport, filtros sincronizados con URL y rutas HTTP de servicios. Se revisa además la ausencia de los anti-patrones expresos del estándar mediante búsqueda estática.
 
 ## Validación funcional en navegador
 
@@ -56,11 +56,13 @@ Se ejecutó el artefacto Docker completo contra SQL Server real y se comprobó d
 - iconografía y fuente Manrope local;
 - navegación directa entre `/productos` y `/productos/stock-bajo`;
 - apertura y validación del formulario en viewport móvil;
+- formulario de producto sin desbordamiento en 762 × 768 y 390 × 844;
+- diálogo de stock completo, con cierre y acción principal visibles en móvil;
 - creación y edición de un producto temporal, reflejadas en métricas y tabla;
 - entrada de inventario, cambio de stock y transición de `Stock bajo` a `Normal`;
 - eliminación desde el diálogo de confirmación y retorno exacto al seed original;
 - layout de 390 px sin scrollbar horizontal global;
-- tabla con scroll horizontal contenido en móvil;
+- listado transformado en tarjetas legibles y sin scroll horizontal en móvil;
 - layout de escritorio;
 - consola sin errores ni warnings durante el flujo.
 
@@ -71,7 +73,7 @@ Además se repitió por HTTP, atravesando el reverse proxy del frontend, el cicl
 La pasada final debe mantener:
 
 - Backend: 12 tests aprobados, 0 fallidos.
-- Frontend: 19 tests aprobados, 0 fallidos.
+- Frontend: 20 tests aprobados, 0 fallidos.
 - Build .NET Release: 0 warnings y 0 errores.
 - Lint Angular: sin hallazgos.
 - Build Angular production: exitoso.

@@ -94,7 +94,7 @@ Componente presentacional. Recibe categorías y filtros, y emite cambios tipados
 
 ### `ProductListComponent`
 
-Recibe productos y emite tres intenciones: ajustar, editar y eliminar. Renderiza una tabla Material, chips de categoría/estado, formato monetario e indicador visual. La tabla dispone de scroll horizontal propio en pantallas angostas para no romper el layout general.
+Recibe productos y emite tres intenciones: ajustar, editar y eliminar. Renderiza una tabla Material en escritorio y reorganiza cada fila como tarjeta etiquetada en pantallas angostas. Categoría, precio, existencias, estado y acciones permanecen visibles sin scroll horizontal.
 
 ### `ProductFormComponent`
 
@@ -104,13 +104,15 @@ Dialog de creación/edición con un `FormGroup` estrictamente tipado y controles
 - patch inicial en modo edición;
 - normalización del valor antes de cerrar;
 - errores accesibles y botón deshabilitado mientras el formulario sea inválido;
+- distribución compacta de 12 columnas en escritorio;
+- panel limitado al viewport, cierre visible y contenido sin desbordamiento horizontal;
 - layout responsive en archivo SCSS independiente.
 
 La validación cliente mejora UX; la API sigue siendo la autoridad.
 
 ### `StockAdjustmentDialogComponent`
 
-Dialog tipado para entrada/salida. Calcula con `computed` el stock resultante, bloquea salidas imposibles y captura una observación opcional. Solo devuelve el payload; el Page decide ejecutar el caso de uso.
+Dialog tipado para entrada/salida. Calcula con `computed` el stock resultante, bloquea salidas imposibles y captura una observación opcional. Su panel se limita al viewport y conserva cierre y acciones visibles en móvil. Solo devuelve el payload; el Page decide ejecutar el caso de uso.
 
 ### `ProductsPageComponent`
 
@@ -135,4 +137,4 @@ Cada componente posee un bloque BEM raíz y elementos con `__`. Los media querie
 
 ## Pruebas frontend
 
-Los 19 specs cubren shell, shared, filtros, lista, formulario, ajuste, página, navegación visible y contratos HTTP de servicios. Cada TestBed activa explícitamente zoneless para reproducir la configuración real y verifica comportamiento observable, no detalles internos del framework.
+Los 20 specs cubren shell, shared, filtros, lista, formulario, ajuste, página, configuración responsive de diálogos, navegación visible y contratos HTTP de servicios. Cada TestBed activa explícitamente zoneless para reproducir la configuración real y verifica comportamiento observable, no detalles internos del framework.

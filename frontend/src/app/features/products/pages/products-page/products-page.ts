@@ -26,6 +26,13 @@ import {
 import { Product, ProductFilters, StockFilter } from '../../models/product.model';
 import { ProductsStore } from '../../services/products.store';
 
+const PRODUCT_FORM_DIALOG_LAYOUT = {
+  width: '44rem',
+  maxWidth: 'calc(100vw - 2rem)',
+  maxHeight: 'calc(100dvh - 2rem)',
+  panelClass: 'product-form-dialog',
+} as const;
+
 @Component({
   selector: 'app-products-page',
   standalone: true,
@@ -88,6 +95,7 @@ export class ProductsPageComponent {
       data,
       autoFocus: 'first-tabbable',
       restoreFocus: true,
+      ...PRODUCT_FORM_DIALOG_LAYOUT,
     });
     const payload = await firstValueFrom(dialogRef.afterClosed());
 
@@ -105,6 +113,7 @@ export class ProductsPageComponent {
       data,
       autoFocus: 'first-tabbable',
       restoreFocus: true,
+      ...PRODUCT_FORM_DIALOG_LAYOUT,
     });
     const payload = await firstValueFrom(dialogRef.afterClosed());
 
@@ -119,6 +128,10 @@ export class ProductsPageComponent {
       data,
       autoFocus: 'first-tabbable',
       restoreFocus: true,
+      width: '34rem',
+      maxWidth: 'calc(100vw - 2rem)',
+      maxHeight: 'calc(100dvh - 2rem)',
+      panelClass: 'stock-adjustment-dialog',
     });
     const payload = await firstValueFrom(dialogRef.afterClosed());
 
@@ -133,7 +146,13 @@ export class ProductsPageComponent {
       message: `Se eliminará “${product.name}” y su historial de movimientos. Esta acción no se puede deshacer.`,
       confirmLabel: 'Eliminar producto',
     };
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, { data, restoreFocus: true });
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data,
+      restoreFocus: true,
+      width: '28rem',
+      maxWidth: 'calc(100vw - 2rem)',
+      panelClass: 'confirm-product-dialog',
+    });
     const confirmed = await firstValueFrom(dialogRef.afterClosed());
 
     if (confirmed) {

@@ -3,16 +3,29 @@
     <span class="product-form__icon" aria-hidden="true">
       <mat-icon>{{ data.product ? 'edit' : 'add_box' }}</mat-icon>
     </span>
-    <div>
+    <div class="product-form__header-copy">
       <span>Inventario</span>
       <h2 mat-dialog-title>{{ title }}</h2>
       <p>Complete la información comercial y los umbrales de existencias.</p>
     </div>
+    <button
+      mat-icon-button
+      type="button"
+      class="product-form__close"
+      aria-label="Cerrar formulario"
+      (click)="cancel()"
+    >
+      <mat-icon aria-hidden="true">close</mat-icon>
+    </button>
   </header>
 
   <mat-dialog-content class="product-form__content">
     <div class="product-form__grid">
-      <mat-form-field appearance="outline" class="product-form__field--wide">
+      <mat-form-field
+        appearance="outline"
+        subscriptSizing="dynamic"
+        class="product-form__field product-form__field--name"
+      >
         <mat-label>Nombre del producto</mat-label>
         <input matInput formControlName="name" autocomplete="off" maxlength="150" />
         <mat-icon matSuffix aria-hidden="true">inventory_2</mat-icon>
@@ -21,7 +34,11 @@
         }
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field
+        appearance="outline"
+        subscriptSizing="dynamic"
+        class="product-form__field product-form__field--category"
+      >
         <mat-label>Categoría</mat-label>
         <mat-select formControlName="categoryId">
           @for (category of data.categories; track category.id) {
@@ -33,17 +50,25 @@
         }
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field
+        appearance="outline"
+        subscriptSizing="dynamic"
+        class="product-form__field product-form__field--price"
+      >
         <mat-label>Precio unitario</mat-label>
         <span matTextPrefix>$&nbsp;</span>
         <input matInput type="number" formControlName="price" min="0.01" step="100" />
-        <mat-hint>Pesos colombianos</mat-hint>
+        <mat-hint>Valor en COP</mat-hint>
         @if (form.controls.price.invalid) {
           <mat-error>Ingrese un precio mayor que cero.</mat-error>
         }
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field
+        appearance="outline"
+        subscriptSizing="dynamic"
+        class="product-form__field product-form__field--stock"
+      >
         <mat-label>Stock actual</mat-label>
         <input matInput type="number" formControlName="stock" min="0" step="1" />
         @if (form.controls.stock.invalid) {
@@ -51,22 +76,30 @@
         }
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field
+        appearance="outline"
+        subscriptSizing="dynamic"
+        class="product-form__field product-form__field--minimum"
+      >
         <mat-label>Stock mínimo</mat-label>
         <input matInput type="number" formControlName="minimumStock" min="0" step="1" />
-        <mat-hint>Activa el indicador de stock bajo</mat-hint>
+        <mat-hint>Nivel de alerta</mat-hint>
         @if (form.controls.minimumStock.invalid) {
           <mat-error>El mínimo no puede ser negativo.</mat-error>
         }
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="product-form__field--wide">
+      <mat-form-field
+        appearance="outline"
+        subscriptSizing="dynamic"
+        class="product-form__field product-form__field--description"
+      >
         <mat-label>Descripción</mat-label>
         <textarea
           matInput
           formControlName="description"
           maxlength="500"
-          rows="3"
+          rows="2"
         ></textarea>
         <mat-hint align="end">{{ form.controls.description.value?.length ?? 0 }}/500</mat-hint>
       </mat-form-field>

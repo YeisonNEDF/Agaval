@@ -2,16 +2,19 @@ import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { provideRouter, Router } from '@angular/router';
+import { of } from 'rxjs';
 import { ProductsStore } from '../../services/products.store';
 import { ProductsPageComponent } from './products-page';
 
 describe('ProductsPageComponent', () => {
   let fixture: ComponentFixture<ProductsPageComponent>;
   let loadSpy: jasmine.Spy;
+  let dialogOpenSpy: jasmine.Spy;
   let router: Router;
 
   beforeEach(async () => {
     loadSpy = jasmine.createSpy('load').and.resolveTo();
+    dialogOpenSpy = jasmine.createSpy('open').and.returnValue({ afterClosed: () => of(undefined) });
     const storeStub = {
       products: signal([]),
       categories: signal([]),
@@ -39,7 +42,7 @@ describe('ProductsPageComponent', () => {
         provideZonelessChangeDetection(),
         provideRouter([]),
         { provide: ProductsStore, useValue: storeStub },
-        { provide: MatDialog, useValue: { open: jasmine.createSpy('open') } },
+        { provide: MatDialog, useValue: { open: dialogOpenSpy } },
       ],
     }).compileComponents();
 
@@ -75,5 +78,19 @@ describe('ProductsPageComponent', () => {
     expect(navigateSpy).toHaveBeenCalledOnceWith(['/productos'], {
       queryParams: { categoriaId: 2, stock: 'normal' },
     });
+  });
+
+  it('keeps the product form inside the viewport', async () => {
+    await fixture.componentInstance.openCreateDialog();
+
+    expect(dialogOpenSpy).toHaveBeenCalledWith(
+      jasmine.any(Function),
+      jasmine.objectContaining({
+        width: '44rem',
+        maxWidth: 'calc(100vw - 2rem)',
+        maxHeight: 'calc(100dvh - 2rem)',
+        panelClass: 'product-form-dialog',
+      }),
+    );
   });
 });

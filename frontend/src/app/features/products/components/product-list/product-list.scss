@@ -144,10 +144,27 @@
   &__actions {
     display: flex;
     justify-content: end;
+
+    button {
+      color: var(--color-text-muted);
+      transition:
+        color 150ms ease,
+        background-color 150ms ease;
+
+      &:hover {
+        color: var(--color-primary-dark);
+        background: var(--color-primary-soft);
+      }
+    }
   }
 
   &__delete {
     color: var(--color-danger);
+
+    &:hover {
+      color: var(--color-danger);
+      background: var(--color-danger-soft);
+    }
   }
 
   &__sr-only {
@@ -176,4 +193,102 @@
 
 .mat-mdc-row:hover {
   background: var(--color-surface-subtle);
+}
+
+@media (width <= 44rem) {
+  .product-list {
+    padding: 0.75rem;
+    background: var(--color-surface-subtle);
+
+    &__heading {
+      margin: -0.75rem -0.75rem 0.75rem;
+      padding: 1.2rem;
+    }
+
+    &__scroll {
+      overflow: visible;
+    }
+
+    &__table {
+      display: block;
+      min-width: 0;
+    }
+
+    &__product {
+      min-width: 0;
+
+      div {
+        min-width: 0;
+      }
+
+      small {
+        max-width: 100%;
+        max-height: 2.8em;
+        line-height: 1.4;
+        white-space: normal;
+      }
+    }
+
+    &__cell {
+      display: grid;
+      gap: 0.25rem;
+      align-content: start;
+      padding: 0.35rem 0;
+
+      &::before {
+        color: var(--color-text-muted);
+        content: attr(data-label);
+        font-size: 0.64rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+    }
+
+    &__cell--product,
+    &__cell--actions {
+      grid-column: 1 / -1;
+    }
+
+    &__cell--product {
+      padding: 0 0 0.8rem;
+      border-bottom: 1px solid var(--color-border-soft);
+    }
+
+    &__cell--actions {
+      margin-top: 0.35rem;
+      padding: 0.6rem 0 0;
+      border-top: 1px solid var(--color-border-soft);
+    }
+
+    &__actions {
+      justify-content: flex-end;
+      gap: 0.2rem;
+    }
+  }
+
+  .mat-mdc-header-row {
+    display: none;
+  }
+
+  .mat-mdc-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem 1rem;
+    height: auto;
+    margin-bottom: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: 0 0.5rem 1.5rem rgb(31 52 84 / 5%);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .mat-mdc-cell {
+    border: 0;
+  }
 }

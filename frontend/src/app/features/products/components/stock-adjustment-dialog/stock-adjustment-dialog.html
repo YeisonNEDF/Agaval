@@ -3,14 +3,23 @@
     <span class="stock-dialog__icon" aria-hidden="true">
       <mat-icon>swap_vert</mat-icon>
     </span>
-    <div>
+    <div class="stock-dialog__header-copy">
       <span>Movimiento de inventario</span>
       <h2 mat-dialog-title>Ajustar stock</h2>
       <p>{{ data.product.name }}</p>
     </div>
+    <button
+      mat-icon-button
+      type="button"
+      class="stock-dialog__close"
+      aria-label="Cerrar ajuste de stock"
+      (click)="cancel()"
+    >
+      <mat-icon aria-hidden="true">close</mat-icon>
+    </button>
   </header>
 
-  <mat-dialog-content>
+  <mat-dialog-content class="stock-dialog__content">
     <section class="stock-dialog__summary" aria-label="Resumen del stock">
       <div>
         <span>Stock actual</span>
@@ -36,7 +45,7 @@
       </mat-radio-button>
     </mat-radio-group>
 
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Cantidad</mat-label>
       <input matInput type="number" formControlName="quantity" min="1" step="1" />
       @if (form.controls.quantity.hasError('exceedsStock')) {
@@ -46,14 +55,14 @@
       }
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Observación</mat-label>
       <textarea matInput formControlName="observation" maxlength="255" rows="2"></textarea>
       <mat-hint>Opcional. Ejemplo: recepción de proveedor.</mat-hint>
     </mat-form-field>
   </mat-dialog-content>
 
-  <mat-dialog-actions align="end">
+  <mat-dialog-actions align="end" class="stock-dialog__actions">
     <button mat-button type="button" (click)="cancel()">Cancelar</button>
     <button mat-flat-button type="submit" [disabled]="form.invalid">
       <mat-icon aria-hidden="true">check</mat-icon>
