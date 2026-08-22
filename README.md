@@ -32,8 +32,9 @@ El modo `Auto` detecta el sistema operativo y usa la opción más directa dispon
 1. carga o crea `.env` desde `.env.example`;
 2. comprueba .NET 10, Node.js 20+ y una conexión SQL Server configurada;
 3. si los tres requisitos nativos existen, ejecuta API y Angular directamente en el host;
-4. si falta cualquiera, usa Docker Compose como entorno reproducible;
-5. espera los health checks y muestra las URLs finales.
+4. si la ruta nativa no está completa, usa Docker Compose como entorno reproducible;
+5. en Windows, si tampoco existe Docker, intenta instalar Docker Desktop con WinGet;
+6. espera los health checks y muestra las URLs finales.
 
 ### macOS y Linux
 
@@ -52,6 +53,14 @@ Desde el Explorador puede abrir `start.cmd`. Desde PowerShell:
 
 Windows usa automáticamente `(localdb)\MSSQLLocalDB` cuando SQL Server Express LocalDB está instalado. Si LocalDB, .NET 10 o Node.js no están disponibles, cambia a Docker Desktop.
 
+Antes de iniciar, PowerShell muestra un diagnóstico por requisito. Si no existe ninguna ruta completa, instala con WinGet el software necesario que puede automatizarse (`Microsoft.DotNet.SDK.10`, `OpenJS.NodeJS.LTS` o `Docker.DockerDesktop`), vuelve a cargar el `PATH` y verifica otra vez. WinGet o el instalador pueden solicitar elevación. LocalDB se deja como selección explícita de SQL Server Express; el modo `Auto` instala Docker en su lugar para no adivinar opciones del motor de datos.
+
+Para revisar el equipo sin instalar ni arrancar nada:
+
+```powershell
+.\start.ps1 -Check -NoInstall
+```
+
 ### Selección explícita
 
 | Objetivo | macOS/Linux/WSL | Windows PowerShell |
@@ -59,6 +68,8 @@ Windows usa automáticamente `(localdb)\MSSQLLocalDB` cuando SQL Server Express 
 | Detección automática | `./start.sh` | `.\start.ps1` |
 | Forzar Docker | `./start.sh --mode docker` | `.\start.ps1 -Mode Docker` |
 | Forzar ejecución nativa | `./start.sh --mode native` | `.\start.ps1 -Mode Native` |
+| Diagnosticar sin iniciar | `./start.sh --check` | `.\start.ps1 -Check` |
+| Desactivar auto-instalación | `./start.sh --no-install` | `.\start.ps1 -NoInstall` |
 | Ver logs | `./start.sh --logs` | `.\start.ps1 -Logs` |
 | Consultar estado | `./start.sh --status` | `.\start.ps1 -Status` |
 | Detener sin borrar datos | `./start.sh --stop` | `.\start.ps1 -Stop` |

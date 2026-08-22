@@ -19,11 +19,28 @@ jobs:
           test -x start.sh
           sh -n start.sh
           ./start.sh --help
+          ./start.sh --check --no-install
       - name: Validate PowerShell launcher
         shell: pwsh
-        run: ./start.ps1 -Help
+        run: |
+          ./start.ps1 -Help
+          ./start.ps1 -Check -NoInstall
       - name: Resolve Compose configuration
         run: docker compose --env-file .env.example config --quiet
+
+  windows-launcher:
+    name: Windows launcher
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate PowerShell diagnosis
+        shell: powershell
+        run: |
+          .\start.ps1 -Help
+          .\start.ps1 -Check -NoInstall
+      - name: Validate CMD entry point
+        shell: cmd
+        run: start.cmd -Check -NoInstall
 
   backend:
     name: Backend
@@ -71,7 +88,7 @@ jobs:
   containers:
     name: Container images
     runs-on: ubuntu-latest
-    needs: [launchers, backend, frontend]
+    needs: [launchers, windows-launcher, backend, frontend]
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3

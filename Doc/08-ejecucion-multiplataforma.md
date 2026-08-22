@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-El proyecto se inicia desde la raíz con un único launcher por familia de sistema operativo. Los launchers detectan las herramientas disponibles, crean `.env` desde `.env.example` cuando hace falta, preparan dependencias, arrancan los servicios y comprueban por HTTP que la API y el frontend respondan.
+El proyecto se inicia desde la raíz con un único launcher por familia de sistema operativo. Los launchers detectan las herramientas disponibles, crean `.env` desde `.env.example` cuando hace falta, preparan dependencias, arrancan los servicios y comprueban por HTTP que la API y el frontend respondan. En Windows, PowerShell también puede completar con WinGet los requisitos que admiten una instalación segura y repetible.
 
 No se exige Docker si la máquina ya puede ejecutar de forma nativa .NET, Node.js y SQL Server. Docker se conserva como entorno reproducible cuando falta alguno de esos requisitos.
 
@@ -31,6 +31,8 @@ Desde PowerShell:
 
 `start.cmd` delega en `start.ps1` con una política de ejecución limitada únicamente a ese proceso; no modifica la política global del equipo.
 
+Al abrir `start.cmd` se ve primero un diagnóstico. Si falta una ruta ejecutable, el launcher anuncia el paquete exacto, lo instala con WinGet, actualiza el `PATH` del proceso y repite la comprobación. El instalador puede mostrar una solicitud de administrador. Si Windows requiere cerrar la terminal, completar WSL 2 o reiniciar, el mensaje final indica el siguiente paso y `start.cmd` mantiene la ventana abierta.
+
 ## Algoritmo del modo automático
 
 ```text
@@ -48,10 +50,13 @@ Leer/crear .env
               / \
             sí   no
             /     \
-         Docker   Error accionable con requisitos faltantes
+         Docker   Windows: instalar Docker Desktop con WinGet
+                  macOS/Linux: error accionable
 ```
 
 En Windows, el launcher intenta iniciar automáticamente la instancia `MSSQLLocalDB` si encuentra `sqllocaldb`. En macOS, Linux y WSL no se adivinan credenciales ni servidores: se exige `NATIVE_DATABASE_CONNECTION` para evitar conectar o modificar por accidente una base ajena.
+
+Si Windows ya tiene LocalDB o `NATIVE_DATABASE_CONNECTION`, pero faltan .NET o Node.js, el modo `Auto` instala esas herramientas y conserva la ejecución nativa. Si falta también el motor SQL, instala Docker Desktop como una única ruta reproducible. No intenta automatizar el asistente de LocalDB porque Microsoft lo publica como una característica seleccionable de SQL Server Express; forzar esa selección podría alterar una instalación SQL existente.
 
 La selección puede controlarse mediante `RUN_MODE` en `.env` o mediante un argumento. El argumento siempre tiene prioridad.
 
@@ -87,6 +92,8 @@ Referencias oficiales:
 | Forzar nativo | `./start.sh --mode native` | `.\start.ps1 -Mode Native` |
 | Primer plano | `./start.sh --foreground` | `.\start.ps1 -Foreground` |
 | Reusar imágenes | `./start.sh --mode docker --no-build` | `.\start.ps1 -Mode Docker -NoBuild` |
+| Diagnosticar sin iniciar | `./start.sh --check` | `.\start.ps1 -Check` |
+| Impedir instalaciones | `./start.sh --no-install` | `.\start.ps1 -NoInstall` |
 | Seguir logs | `./start.sh --logs` | `.\start.ps1 -Logs` |
 | Estado | `./start.sh --status` | `.\start.ps1 -Status` |
 | Detener | `./start.sh --stop` | `.\start.ps1 -Stop` |
@@ -121,13 +128,28 @@ El password publicado es deliberadamente una credencial local de ejemplo, no un 
 
 ### Windows con LocalDB
 
-Instalar:
+La forma automática recomendada es ejecutar `start.cmd`: si no encuentra una ruta nativa completa, preparará Docker Desktop. Para exigir el modo nativo se puede usar:
 
-1. .NET SDK 10;
-2. Node.js 20 o superior con npm;
-3. SQL Server Express LocalDB.
+```powershell
+.\start.ps1 -Mode Native
+```
+
+El launcher instala con WinGet .NET SDK 10 y Node.js LTS si hacen falta. Para usar LocalDB en vez de Docker hay que:
+
+1. descargar SQL Server Express desde Microsoft;
+2. seleccionar expresamente la característica **LocalDB** en su instalador.
 
 Después ejecutar `start.cmd`. El launcher inicia `MSSQLLocalDB`, establece autenticación integrada y deja que EF Core cree `GestorInventarioDB`, aplique la migración y cargue el seed.
+
+Paquetes usados por la instalación asistida:
+
+| Dependencia | Identificador WinGet | Cuándo se instala |
+| --- | --- | --- |
+| .NET SDK 10 | `Microsoft.DotNet.SDK.10` | Modo nativo con SQL disponible y SDK faltante. |
+| Node.js LTS + npm | `OpenJS.NodeJS.LTS` | Modo nativo con SQL disponible y Node faltante. |
+| Docker Desktop | `Docker.DockerDesktop` | Modo Docker o Auto sin ruta nativa completa. |
+
+Los comandos aceptan los acuerdos de origen y paquete de WinGet para permitir una instalación no interactiva, pero el launcher informa el paquete antes de ejecutarlo. `-NoInstall` desactiva totalmente ese comportamiento.
 
 ### macOS, Linux o SQL Server externo
 
@@ -203,7 +225,7 @@ No hay que editar código: el launcher actualiza CORS, proxy y URLs con esos val
 
 ### Docker instalado pero detenido
 
-En macOS y Windows el launcher intenta abrir Docker Desktop y espera hasta dos minutos. En Linux se debe iniciar el servicio según la distribución, normalmente:
+En macOS el launcher intenta abrir Docker Desktop y espera hasta dos minutos; en Windows espera hasta tres minutos, contemplando el primer arranque. En Linux se debe iniciar el servicio según la distribución, normalmente:
 
 ```bash
 sudo systemctl start docker
@@ -230,6 +252,14 @@ Las causas habituales son conexión SQL inválida, contraseña que no cumple la 
 ### PowerShell bloquea scripts
 
 Usar `start.cmd`, que aplica `-ExecutionPolicy Bypass` solo al proceso lanzado. No es necesario cambiar la política permanente del equipo.
+
+### WinGet no está disponible
+
+WinGet forma parte de **Instalador de aplicación** en Windows 10/11. Instalarlo desde [Microsoft](https://aka.ms/getwinget), cerrar la terminal y ejecutar otra vez `start.cmd`. El launcher no descarga ejecutables arbitrarios para reemplazar el gestor de paquetes del sistema.
+
+### WinGet terminó pero el comando sigue sin aparecer
+
+El launcher actualiza el `PATH` de su propio proceso y conoce las rutas habituales de .NET, Node, Docker y LocalDB. Si un instalador exige renovar la sesión, cerrar la ventana y abrir `start.cmd` otra vez. Si Docker o WSL 2 solicitan reinicio, completar ese reinicio antes de repetir el comando.
 
 ### WSL no encuentra Docker
 
@@ -258,4 +288,11 @@ docker compose down --volumes
 
 ## Criterio de soporte
 
-El launcher informa un error accionable si no existe ni un camino nativo completo ni Docker. No intenta instalar silenciosamente software del sistema, aceptar licencias o solicitar privilegios administrativos. La instalación de dependencias externas sigue siendo una decisión visible del dueño de la máquina; una vez instaladas, el proyecto prepara automáticamente sus dependencias de aplicación y su base de desarrollo.
+El launcher informa un error accionable si no existe una ruta completa. En Windows intenta instalar de forma visible .NET, Node o Docker Desktop mediante WinGet cuando el modo elegido lo requiere; el usuario puede impedirlo con `-NoInstall`. No descarga instaladores desde ubicaciones arbitrarias, no fuerza LocalDB ni reinicia el equipo. En macOS/Linux no instala software del sistema: mantiene el diagnóstico y remite a los gestores oficiales de cada plataforma.
+
+Referencias de la automatización de Windows:
+
+- [Comando `winget install`](https://learn.microsoft.com/es-es/windows/package-manager/winget/install)
+- [Instalar .NET en Windows con WinGet](https://learn.microsoft.com/en-us/dotnet/core/install/windows)
+- [Instalar Docker Desktop en Windows](https://docs.docker.com/desktop/setup/install/windows-install/)
+- [Instalar SQL Server Express LocalDB](https://learn.microsoft.com/es-es/sql/database-engine/configure-windows/sql-server-express-localdb?view=sql-server-ver17)

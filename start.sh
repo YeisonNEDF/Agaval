@@ -11,6 +11,7 @@ MODE="auto"
 MODE_FROM_CLI="false"
 DETACHED="true"
 BUILD="true"
+NO_INSTALL="false"
 DOTNET_EXEC=""
 NPM_EXEC=""
 NATIVE_CONNECTION=""
@@ -28,12 +29,14 @@ Inicio:
   --no-build        Reutiliza las imágenes Docker existentes.
 
 Administración:
+  --check           Diagnostica requisitos y sale sin instalar ni iniciar servicios.
+  --no-install      En Windows, impide que PowerShell instale requisitos con WinGet.
   --logs            Sigue los logs del modo activo.
   --status          Muestra procesos nativos y contenedores.
   --stop            Detiene procesos y contenedores sin borrar la base.
   -h, --help        Muestra esta ayuda.
 
-En Windows use start.cmd o: .\start.ps1 -Mode Auto
+En Windows, este script delega en start.ps1. También puede usar start.cmd.
 EOF
 }
 
@@ -148,9 +151,36 @@ require_native() {
 }
 
 docker_engine_is_ready() {
-  command -v docker >/dev/null 2>&1 || return 1
-  docker compose version >/dev/null 2>&1 || return 1
+  docker_tooling_is_ready || return 1
   docker info >/dev/null 2>&1
+}
+
+docker_tooling_is_ready() {
+  command -v docker >/dev/null 2>&1 || return 1
+  docker compose version >/dev/null 2>&1
+}
+
+show_requirement_report() {
+  printf '\nDiagnóstico de requisitos\n'
+
+  if native_is_ready; then
+    printf '  %-28s %s\n' 'Ruta nativa' 'LISTA'
+  else
+    printf '  %-28s %s (%s)\n' 'Ruta nativa' 'INCOMPLETA' "$native_missing"
+  fi
+
+  if docker_tooling_is_ready; then
+    printf '  %-28s %s\n' 'Docker + Compose' 'LISTO'
+    if docker info >/dev/null 2>&1; then
+      printf '  %-28s %s\n' 'Motor Docker' 'ACTIVO'
+    else
+      printf '  %-28s %s\n' 'Motor Docker' 'DETENIDO'
+    fi
+  else
+    printf '  %-28s %s\n' 'Docker + Compose' 'FALTA'
+  fi
+
+  printf '\nEn macOS/Linux el launcher no instala software del sistema. Consulte Doc/08-ejecucion-multiplataforma.md.\n'
 }
 
 require_docker() {
@@ -394,6 +424,9 @@ forward_to_windows() {
   [ "$ACTION" = "logs" ] && set -- "$@" -Logs
   [ "$ACTION" = "status" ] && set -- "$@" -Status
   [ "$ACTION" = "stop" ] && set -- "$@" -Stop
+  [ "$ACTION" = "check" ] && set -- "$@" -Check
+  [ "$NO_INSTALL" = "true" ] && set -- "$@" -NoInstall
+  printf 'Windows detectado: se delega el diagnóstico y la instalación asistida a start.ps1.\n'
   exec powershell.exe "$@"
 }
 
@@ -422,6 +455,12 @@ while [ "$#" -gt 0 ]; do
       ;;
     --no-build)
       BUILD="false"
+      ;;
+    --check)
+      ACTION="check"
+      ;;
+    --no-install)
+      NO_INSTALL="true"
       ;;
     --logs)
       ACTION="logs"
@@ -487,6 +526,10 @@ case "$ACTION" in
       docker compose down
       printf 'Contenedores detenidos. El volumen SQL Server se conservó.\n'
     fi
+    ;;
+  check)
+    show_requirement_report
+    printf '\nDiagnóstico terminado. No se instaló software ni se iniciaron servicios.\n'
     ;;
   start)
     case "$MODE" in

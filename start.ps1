@@ -7,6 +7,8 @@ param(
     [switch]$Logs,
     [switch]$Status,
     [switch]$Stop,
+    [switch]$Check,
+    [switch]$NoInstall,
     [switch]$Help
 )
 
@@ -18,8 +20,16 @@ $script:NpmExecutable = $null
 $script:NativeConnection = $null
 $script:NativeMissing = $null
 $script:ActiveMode = $null
+$script:NativeReady = $false
+$script:DockerToolingReady = $false
+$script:DockerEngineReady = $false
 
 Set-Location $ProjectRoot
+
+trap {
+    Write-Host $_.Exception.Message -ForegroundColor Red
+    exit 1
+}
 
 function Show-Usage {
     @"
@@ -33,17 +43,118 @@ Inicio:
   -NoBuild          Reutiliza las imágenes Docker existentes.
 
 Administración:
+  -Check            Diagnostica requisitos y sale sin instalar ni iniciar servicios.
+  -NoInstall        No instala software; solo usa lo que ya existe en el equipo.
   -Logs             Sigue los logs del modo activo.
   -Status           Muestra procesos nativos y contenedores.
   -Stop             Detiene procesos y contenedores sin borrar la base.
   -Help             Muestra esta ayuda.
 
 También puede hacer doble clic en start.cmd para usar el modo Auto.
+En Windows, el inicio normal usa WinGet para instalar requisitos faltantes cuando es posible.
 "@
 }
 
 function Throw-SetupError([string]$Message) {
     throw "Error: $Message"
+}
+
+function Test-IsWindows {
+    return $env:OS -eq "Windows_NT"
+}
+
+function Refresh-ProcessPath {
+    if (-not (Test-IsWindows)) {
+        return
+    }
+
+    $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+    $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    $pathParts = [System.Collections.Generic.List[string]]::new()
+
+    foreach ($pathValue in @($machinePath, $userPath, $env:Path)) {
+        if ([string]::IsNullOrWhiteSpace($pathValue)) {
+            continue
+        }
+
+        foreach ($pathPart in ($pathValue -split ";")) {
+            if ([string]::IsNullOrWhiteSpace($pathPart)) {
+                continue
+            }
+
+            if (-not $pathParts.Contains($pathPart)) {
+                $pathParts.Add($pathPart)
+            }
+        }
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($env:ProgramFiles)) {
+        $knownPaths = @(
+            (Join-Path $env:ProgramFiles "dotnet"),
+            (Join-Path $env:ProgramFiles "nodejs"),
+            (Join-Path $env:ProgramFiles "Docker\Docker\resources\bin"),
+            (Join-Path $env:ProgramFiles "Microsoft SQL Server\170\Tools\Binn"),
+            (Join-Path $env:ProgramFiles "Microsoft SQL Server\160\Tools\Binn"),
+            (Join-Path $env:ProgramFiles "Microsoft SQL Server\150\Tools\Binn"),
+            (Join-Path $env:ProgramFiles "Microsoft SQL Server\140\Tools\Binn")
+        )
+
+        foreach ($knownPath in $knownPaths) {
+            if ((Test-Path $knownPath) -and -not $pathParts.Contains($knownPath)) {
+                $pathParts.Add($knownPath)
+            }
+        }
+    }
+
+    $env:Path = $pathParts -join ";"
+}
+
+function Get-WinGetExecutable {
+    if (-not (Test-IsWindows)) {
+        return $null
+    }
+
+    $wingetCommand = Get-Command winget.exe -ErrorAction SilentlyContinue
+    if ($null -eq $wingetCommand) {
+        $wingetCommand = Get-Command winget -ErrorAction SilentlyContinue
+    }
+
+    if ($null -eq $wingetCommand) {
+        return $null
+    }
+
+    return $wingetCommand.Source
+}
+
+function Install-WinGetPackage([string]$PackageId, [string]$Label) {
+    if ($NoInstall) {
+        Throw-SetupError "Falta $Label y se deshabilitó la instalación automática con -NoInstall."
+    }
+
+    $wingetExecutable = Get-WinGetExecutable
+    if ($null -eq $wingetExecutable) {
+        Throw-SetupError "Falta $Label y WinGet no está disponible. Instale 'Instalador de aplicación' desde Microsoft Store (https://aka.ms/getwinget), cierre y abra la terminal y vuelva a ejecutar start.cmd."
+    }
+
+    Write-Host "`nFalta $Label." -ForegroundColor Yellow
+    Write-Host "Se instalará '$PackageId' con WinGet. El instalador puede solicitar permisos de administrador."
+
+    & $wingetExecutable install `
+        --id $PackageId `
+        --exact `
+        --source winget `
+        --silent `
+        --disable-interactivity `
+        --accept-source-agreements `
+        --accept-package-agreements
+
+    $installExitCode = $LASTEXITCODE
+    if ($installExitCode -ne 0) {
+        Throw-SetupError "WinGet no pudo instalar $Label (código $installExitCode). Revise el mensaje anterior, acepte la solicitud de administrador si aparece y repita start.cmd."
+    }
+
+    Refresh-ProcessPath
+    Write-Host "$Label quedó instalado según WinGet. Se verificarán nuevamente los requisitos."
 }
 
 function Ensure-EnvironmentFile {
@@ -120,7 +231,12 @@ function Get-CompatibleNpmExecutable {
         return $null
     }
 
-    $majorVersion = [int](& $nodeCommand.Source -p 'Number(process.versions.node.split(".")[0])')
+    try {
+        $majorVersion = [int](& $nodeCommand.Source -p 'Number(process.versions.node.split(".")[0])')
+    } catch {
+        return $null
+    }
+
     if ($majorVersion -lt 20) {
         return $null
     }
@@ -128,7 +244,7 @@ function Get-CompatibleNpmExecutable {
     return $npmCommand.Source
 }
 
-function Resolve-NativeConnection {
+function Resolve-NativeConnection([switch]$DoNotStartLocalDb) {
     $configuredConnection = Get-EnvironmentValue "NATIVE_DATABASE_CONNECTION"
     if (-not [string]::IsNullOrWhiteSpace($configuredConnection)) {
         return $configuredConnection
@@ -140,7 +256,17 @@ function Resolve-NativeConnection {
     }
 
     if ($null -ne $localDb) {
-        & $localDb.Source start MSSQLLocalDB | Out-Null
+        if (-not $DoNotStartLocalDb) {
+            & $localDb.Source start MSSQLLocalDB *> $null
+            if ($LASTEXITCODE -ne 0) {
+                & $localDb.Source create MSSQLLocalDB -s *> $null
+            }
+
+            if ($LASTEXITCODE -ne 0) {
+                return $null
+            }
+        }
+
         $databaseName = Get-EnvironmentValue "DATABASE_NAME" "GestorInventarioDB"
         return "Server=(localdb)\MSSQLLocalDB;Database=$databaseName;Integrated Security=True;TrustServerCertificate=True"
     }
@@ -148,11 +274,11 @@ function Resolve-NativeConnection {
     return $null
 }
 
-function Test-NativeRequirements {
+function Test-NativeRequirements([switch]$DoNotStartServices) {
     $missing = [System.Collections.Generic.List[string]]::new()
     $script:DotnetExecutable = Get-Dotnet10Executable
     $script:NpmExecutable = Get-CompatibleNpmExecutable
-    $script:NativeConnection = Resolve-NativeConnection
+    $script:NativeConnection = Resolve-NativeConnection -DoNotStartLocalDb:$DoNotStartServices
 
     if ($null -eq $script:DotnetExecutable) {
         $missing.Add(".NET SDK 10")
@@ -165,37 +291,152 @@ function Test-NativeRequirements {
     }
 
     $script:NativeMissing = $missing -join ", "
-    return $missing.Count -eq 0
+    $script:NativeReady = $missing.Count -eq 0
+    return $script:NativeReady
 }
 
 function Require-NativeRequirements {
     if (-not (Test-NativeRequirements)) {
-        Throw-SetupError "El modo nativo requiere: $script:NativeMissing. Consulte Doc/08-ejecucion-multiplataforma.md."
+        $databaseHelp = ""
+        if ([string]::IsNullOrWhiteSpace($script:NativeConnection)) {
+            $databaseHelp = " LocalDB debe instalarse seleccionando esa característica en SQL Server Express (https://aka.ms/sqlexpress) o puede definir NATIVE_DATABASE_CONNECTION en .env."
+        }
+
+        Throw-SetupError "El modo nativo aún requiere: $script:NativeMissing.$databaseHelp Consulte Doc/08-ejecucion-multiplataforma.md."
     }
 }
 
-function Test-DockerEngine {
+function Test-DockerTooling {
     if ($null -eq (Get-Command docker -ErrorAction SilentlyContinue)) {
+        $script:DockerToolingReady = $false
         return $false
     }
 
     & docker compose version *> $null
     if ($LASTEXITCODE -ne 0) {
+        $script:DockerToolingReady = $false
+        return $false
+    }
+
+    $script:DockerToolingReady = $true
+    return $true
+}
+
+function Test-DockerEngine {
+    if (-not (Test-DockerTooling)) {
+        $script:DockerEngineReady = $false
         return $false
     }
 
     & docker info *> $null
-    return $LASTEXITCODE -eq 0
+    $script:DockerEngineReady = $LASTEXITCODE -eq 0
+    return $script:DockerEngineReady
+}
+
+function Show-RequirementReport([switch]$DoNotStartServices) {
+    $nativeReady = Test-NativeRequirements -DoNotStartServices:$DoNotStartServices
+    $dockerToolingReady = Test-DockerTooling
+    $dockerEngineReady = $false
+    if ($dockerToolingReady) {
+        $dockerEngineReady = Test-DockerEngine
+    }
+
+    $rows = @(
+        [PSCustomObject]@{
+            Requisito = ".NET SDK 10"
+            Estado = $(if ($null -ne $script:DotnetExecutable) { "LISTO" } else { "FALTA" })
+            Uso = "Modo nativo"
+        },
+        [PSCustomObject]@{
+            Requisito = "Node.js 20+ y npm"
+            Estado = $(if ($null -ne $script:NpmExecutable) { "LISTO" } else { "FALTA" })
+            Uso = "Modo nativo"
+        },
+        [PSCustomObject]@{
+            Requisito = "SQL Server / LocalDB"
+            Estado = $(if (-not [string]::IsNullOrWhiteSpace($script:NativeConnection)) { "LISTO" } else { "FALTA" })
+            Uso = "Modo nativo"
+        },
+        [PSCustomObject]@{
+            Requisito = "Docker + Compose"
+            Estado = $(if ($dockerToolingReady) { "LISTO" } else { "FALTA" })
+            Uso = "Modo Docker"
+        },
+        [PSCustomObject]@{
+            Requisito = "Motor Docker"
+            Estado = $(if ($dockerEngineReady) { "ACTIVO" } elseif ($dockerToolingReady) { "DETENIDO" } else { "NO APLICA" })
+            Uso = "Modo Docker"
+        },
+        [PSCustomObject]@{
+            Requisito = "WinGet"
+            Estado = $(if ($null -ne (Get-WinGetExecutable)) { "LISTO" } elseif (Test-IsWindows) { "FALTA" } else { "NO APLICA" })
+            Uso = "Instalación asistida"
+        }
+    )
+
+    Write-Host "`nDiagnóstico de requisitos"
+    $rows | Format-Table -AutoSize | Out-String | Write-Host
+
+    if ($nativeReady) {
+        Write-Host "Ruta nativa: lista. No se necesita Docker."
+    } elseif ($dockerToolingReady) {
+        Write-Host "Ruta Docker: instalada$(if ($dockerEngineReady) { ' y activa' } else { '; falta iniciar Docker Desktop' })."
+    } elseif (Test-IsWindows) {
+        if ($NoInstall) {
+            Write-Host "No hay una ruta completa y -NoInstall impide instalar requisitos." -ForegroundColor Yellow
+        } else {
+            switch ($Mode.ToLowerInvariant()) {
+                "native" {
+                    Write-Host "Modo Native: se intentará instalar .NET y Node.js con WinGet; LocalDB o NATIVE_DATABASE_CONNECTION deben definirse explícitamente." -ForegroundColor Yellow
+                }
+                "docker" {
+                    Write-Host "Modo Docker: se intentará instalar Docker Desktop con WinGet." -ForegroundColor Yellow
+                }
+                default {
+                    if (-not [string]::IsNullOrWhiteSpace($script:NativeConnection)) {
+                        Write-Host "Modo Auto: existe SQL; se intentará completar .NET y Node.js con WinGet." -ForegroundColor Yellow
+                    } else {
+                        Write-Host "Modo Auto: se intentará instalar Docker Desktop con WinGet." -ForegroundColor Yellow
+                    }
+                }
+            }
+        }
+    }
+
+    return [PSCustomObject]@{
+        NativeReady = $nativeReady
+        DockerToolingReady = $dockerToolingReady
+        DockerEngineReady = $dockerEngineReady
+    }
+}
+
+function Install-NativeToolchain {
+    Test-NativeRequirements | Out-Null
+
+    if ($null -eq $script:DotnetExecutable) {
+        Install-WinGetPackage "Microsoft.DotNet.SDK.10" ".NET SDK 10"
+    }
+
+    if ($null -eq $script:NpmExecutable) {
+        Install-WinGetPackage "OpenJS.NodeJS.LTS" "Node.js LTS y npm"
+    }
+
+    Refresh-ProcessPath
+    Test-NativeRequirements | Out-Null
+}
+
+function Install-DockerDesktop {
+    Install-WinGetPackage "Docker.DockerDesktop" "Docker Desktop"
+    Refresh-ProcessPath
+
+    if (-not (Test-DockerTooling)) {
+        Throw-SetupError "Docker Desktop fue instalado, pero esta terminal aún no encuentra 'docker compose'. Cierre esta ventana, abra start.cmd de nuevo y, si Windows lo solicita, reinicie el equipo."
+    }
 }
 
 function Require-Docker {
-    if ($null -eq (Get-Command docker -ErrorAction SilentlyContinue)) {
-        Throw-SetupError "Docker Desktop no está instalado. Consulte Doc/08-ejecucion-multiplataforma.md."
-    }
-
-    & docker compose version *> $null
-    if ($LASTEXITCODE -ne 0) {
-        Throw-SetupError "El plugin Docker Compose no está disponible."
+    if (-not (Test-DockerTooling)) {
+        Throw-SetupError "Docker Desktop o el plugin Compose no están disponibles. Ejecute start.cmd para instalarlos automáticamente o consulte Doc/08-ejecucion-multiplataforma.md."
     }
 
     & docker info *> $null
@@ -203,12 +444,19 @@ function Require-Docker {
         return
     }
 
-    $dockerDesktop = Join-Path $env:ProgramFiles "Docker\Docker\Docker Desktop.exe"
-    if (Test-Path $dockerDesktop) {
-        Write-Host -NoNewline "Iniciando Docker Desktop"
-        Start-Process $dockerDesktop
+    $dockerDesktop = $null
+    if (-not [string]::IsNullOrWhiteSpace($env:ProgramFiles)) {
+        $dockerDesktopCandidate = Join-Path $env:ProgramFiles "Docker\Docker\Docker Desktop.exe"
+        if (Test-Path $dockerDesktopCandidate) {
+            $dockerDesktop = $dockerDesktopCandidate
+        }
+    }
 
-        for ($attempt = 1; $attempt -le 60; $attempt++) {
+    if ($null -ne $dockerDesktop) {
+        Write-Host -NoNewline "Iniciando Docker Desktop"
+        Start-Process $dockerDesktop | Out-Null
+
+        for ($attempt = 1; $attempt -le 90; $attempt++) {
             Start-Sleep -Seconds 2
             & docker info *> $null
             if ($LASTEXITCODE -eq 0) {
@@ -220,7 +468,7 @@ function Require-Docker {
         Write-Host
     }
 
-    Throw-SetupError "Docker está instalado, pero el motor no está disponible. Inicie Docker Desktop."
+    Throw-SetupError "Docker está instalado, pero el motor no quedó disponible. Abra Docker Desktop, complete la configuración inicial/WSL 2 que Windows solicite y vuelva a ejecutar start.cmd."
 }
 
 function Test-PidFile([string]$PidFile) {
@@ -478,12 +726,19 @@ if ($Help) {
 }
 
 Ensure-EnvironmentFile
+Refresh-ProcessPath
 $frontendPort = Get-EnvironmentValue "FRONTEND_PORT" "4200"
 $backendPort = Get-EnvironmentValue "BACKEND_PORT" "5100"
 $publicHost = Get-EnvironmentValue "PUBLIC_HOST" "localhost"
 
 if (-not $PSBoundParameters.ContainsKey("Mode")) {
     $Mode = Get-EnvironmentValue "RUN_MODE" "Auto"
+}
+
+if ($Check) {
+    $requirements = Show-RequirementReport -DoNotStartServices
+    Write-Host "`nDiagnóstico terminado. No se instaló software ni se iniciaron servicios."
+    exit 0
 }
 
 if ($Logs) {
@@ -525,17 +780,46 @@ if ($Stop) {
 
 switch ($Mode.ToLowerInvariant()) {
     "native" {
+        $requirements = Show-RequirementReport
+        if (-not $requirements.NativeReady -and -not $NoInstall -and (Test-IsWindows)) {
+            Install-NativeToolchain
+        }
         Start-NativeMode $frontendPort $backendPort $publicHost
     }
     "docker" {
+        $requirements = Show-RequirementReport
+        if (-not $requirements.DockerToolingReady) {
+            if ($NoInstall -or -not (Test-IsWindows)) {
+                Require-Docker
+            }
+            Install-DockerDesktop
+        }
         Start-DockerMode $frontendPort $backendPort $publicHost
     }
     "auto" {
-        if (Test-NativeRequirements) {
+        $requirements = Show-RequirementReport
+        if ($requirements.NativeReady) {
             Write-Host "Requisitos nativos detectados; se usará ejecución nativa."
             Start-NativeMode $frontendPort $backendPort $publicHost
+        } elseif ($requirements.DockerToolingReady) {
+            Write-Host "La ruta nativa no está completa ($script:NativeMissing); se usará Docker."
+            Start-DockerMode $frontendPort $backendPort $publicHost
+        } elseif ($NoInstall -or -not (Test-IsWindows)) {
+            Throw-SetupError "No existe una ruta completa. Modo nativo: $script:NativeMissing. Docker Desktop + Compose tampoco están disponibles. Consulte Doc/08-ejecucion-multiplataforma.md."
         } else {
-            Write-Host "Modo nativo no disponible ($script:NativeMissing); se usará Docker."
+            if (-not [string]::IsNullOrWhiteSpace($script:NativeConnection)) {
+                Write-Host "Existe SQL Server para el modo nativo; se intentará completar .NET y Node.js."
+                Install-NativeToolchain
+            }
+
+            if (Test-NativeRequirements) {
+                Write-Host "Requisitos nativos completados; no se necesita Docker."
+                Start-NativeMode $frontendPort $backendPort $publicHost
+                break
+            }
+
+            Write-Host "La ruta nativa aún requiere $script:NativeMissing; se preparará el entorno reproducible con Docker."
+            Install-DockerDesktop
             Start-DockerMode $frontendPort $backendPort $publicHost
         }
     }

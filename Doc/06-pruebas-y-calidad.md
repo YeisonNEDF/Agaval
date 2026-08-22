@@ -96,6 +96,8 @@ También se validó el modo nativo en macOS con .NET SDK 10.0.400 y Node.js 22.1
 
 El launcher PowerShell se ejecutó con PowerShell 7.6.5 siguiendo el mismo recorrido nativo. Se verificaron inicio, health checks, paso de una ruta con espacios al proxy, respuestas HTTP 200, detección de PID con `-Status` y cierre limpio con `-Stop`. La detección concreta de LocalDB debe validarse en Windows, ya que LocalDB no existe en macOS.
 
+La instalación asistida añadió verificaciones no destructivas `--check`/`-Check -NoInstall`. Localmente se validaron la sintaxis POSIX, el diagnóstico shell, el parseo completo de PowerShell 7.6.2, su diagnóstico y la resolución de Compose. CI ejecuta además `start.ps1` y `start.cmd` sobre `windows-latest`; esta comprobación confirma detección y mensajes en Windows sin instalar paquetes en el runner. La rama que invoca WinGet queda deliberadamente fuera de CI porque cambiaría el sistema anfitrión y puede requerir elevación o reinicio.
+
 La prueba Docker se ejecutó en macOS Apple Silicon mediante emulación `linux/amd64`. Es válida como evidencia funcional de desarrollo, pero no convierte esa combinación en una plataforma SQL Server soportada oficialmente por Microsoft; la distinción se explica en `Doc/08-ejecucion-multiplataforma.md`.
 
 Si una ejecución posterior cambia estos valores, el resultado de CI es la fuente de verdad y debe corregirse antes de desplegar.
