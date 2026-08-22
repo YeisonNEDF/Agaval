@@ -32,6 +32,7 @@ Cobertura de comportamiento:
 - rechazo de una salida que dejaría stock negativo;
 - validación de Commands;
 - orquestación de Create con repositorios dobles;
+- ciclo HTTP funcional completo a través de controllers, MediatR y FluentValidation;
 - regla de dependencias entre proyectos.
 
 ## Frontend
@@ -49,26 +50,27 @@ Los 19 specs prueban componentes, shell, navegación visible, filtros sincroniza
 
 ## Validación funcional en navegador
 
-Se ejecutó Angular contra una API local controlada con el mismo contrato HTTP y se comprobó:
+Se ejecutó el artefacto Docker completo contra SQL Server real y se comprobó desde el navegador:
 
 - render de dashboard, filtros y tabla;
 - iconografía y fuente Manrope local;
 - navegación directa entre `/productos` y `/productos/stock-bajo`;
 - apertura y validación del formulario en viewport móvil;
-- creación de `Mouse ergonómico`, reflejada en el contador y la tabla;
-- entrada de una unidad, con cambio de stock de 8 a 9;
+- creación y edición de un producto temporal, reflejadas en métricas y tabla;
+- entrada de inventario, cambio de stock y transición de `Stock bajo` a `Normal`;
+- eliminación desde el diálogo de confirmación y retorno exacto al seed original;
 - layout de 390 px sin scrollbar horizontal global;
 - tabla con scroll horizontal contenido en móvil;
 - layout de escritorio;
 - consola sin errores ni warnings durante el flujo.
 
-La ejecución real de la migración requiere una instancia SQL Server. En Development y Compose se aplica automáticamente cuando el motor está disponible.
+Además se repitió por HTTP, atravesando el reverse proxy del frontend, el ciclo crear, consultar, editar, listar stock bajo, ajustar y eliminar. Se verificaron 201, 200, 204 y 404, junto con respuestas 400 para datos inválidos y una salida superior a las existencias. En Development y Compose la migración se aplica automáticamente cuando SQL Server está disponible.
 
 ## Resultado registrado
 
 La pasada final debe mantener:
 
-- Backend: 11 tests aprobados, 0 fallidos.
+- Backend: 12 tests aprobados, 0 fallidos.
 - Frontend: 19 tests aprobados, 0 fallidos.
 - Build .NET Release: 0 warnings y 0 errores.
 - Lint Angular: sin hallazgos.
@@ -86,6 +88,7 @@ Los seis archivos YAML de CI, Compose y Kubernetes fueron parseados correctament
 - `GET /api/productos` y `GET /api/categorias` con HTTP 200 y datos persistidos;
 - frontend servido por Nginx con HTTP 200;
 - conectividad frontend -> reverse proxy -> API -> SQL Server.
+- ciclo CRUD y ajuste de stock real, con limpieza del registro temporal al finalizar.
 
 También se validó el modo nativo en macOS con .NET SDK 10.0.400 y Node.js 22.19, usando la instancia SQL del contenedor como servicio externo temporal. El launcher inició ambos procesos, y respondieron HTTP 200 `/health`, productos, categorías, frontend y el proxy `/api`; el seed devolvió 2 productos y 3 categorías y no se registraron errores en los logs.
 

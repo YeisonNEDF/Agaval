@@ -321,7 +321,7 @@ Autenticación/autorización, paginación, concurrencia optimista, telemetría c
 | Concurrencia de stock | transacción única, sin `rowversion` | control optimista y respuesta 409 |
 | Historial en UI | se persiste pero no hay pantalla dedicada | endpoint paginado y timeline |
 | Categorías | solo lectura, como permite el alcance | feature CRUD separada |
-| E2E | revisión funcional y specs unitarios | Playwright en CI |
+| E2E | recorrido manual completo en navegador sobre Docker y SQL Server | automatización Playwright en CI |
 | Integración SQL en CI | imágenes y modelo validados | Testcontainers/servicio SQL efímero |
 | Swagger | solo Development | portal de API autenticado si se requiere |
 | Apple Silicon | funciona por emulación en Docker Desktop | SQL remoto o host x86-64 soportado |

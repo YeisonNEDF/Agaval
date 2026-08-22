@@ -12,6 +12,7 @@ src/
 └── Agaval.Inventory.Api
 
 tests/
+├── Agaval.Inventory.Api.FunctionalTests
 ├── Agaval.Inventory.Domain.UnitTests
 └── Agaval.Inventory.Application.UnitTests
 ```
@@ -73,4 +74,4 @@ dotnet test Agaval.Inventory.slnx --configuration Release --no-build
 dotnet list Agaval.Inventory.slnx package --vulnerable --include-transitive
 ```
 
-Resultados de la última verificación: 11 pruebas aprobadas, build Release sin warnings ni errores y sin vulnerabilidades NuGet reportadas.
+Resultados de la última verificación: 12 pruebas aprobadas, incluidas las del ciclo HTTP funcional, build Release sin warnings ni errores y sin vulnerabilidades NuGet reportadas.

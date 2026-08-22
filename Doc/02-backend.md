@@ -4,7 +4,7 @@
 
 - `global.json` fija el SDK .NET 10 para evitar compilaciones accidentales con otra versión.
 - `Directory.Build.props` activa nullable, análisis moderno y warnings como errores en todos los proyectos.
-- `Agaval.Inventory.slnx` agrupa las cuatro capas y los dos proyectos de pruebas.
+- `Agaval.Inventory.slnx` agrupa las cuatro capas y los tres proyectos de pruebas.
 - `dotnet-tools.json` fija `dotnet-ef`, haciendo reproducibles las migraciones.
 
 ## Domain
@@ -124,6 +124,8 @@ Los mapeos son explícitos: un cambio de convención de EF no modifica silencios
 
 `CreateProductRequest`, `UpdateProductRequest` y `AdjustStockRequest` representan el JSON de entrada. Se mantienen separados de los Commands para que la evolución de HTTP no contamine Application.
 
+Los records de transporte no duplican reglas mediante Data Annotations. Cada acción los transforma en Commands y el pipeline de FluentValidation conserva una única fuente de verdad para longitudes, rangos, enum y campos obligatorios. Esto evita divergencias y es compatible con el model binding de records posicionales en ASP.NET Core 10.
+
 ### `ProductsController.cs`
 
 | Método | Ruta | Caso de uso |
@@ -159,3 +161,4 @@ Convierte validaciones e invariantes de dominio a 400, ausencias a 404, conflict
 - `CreateProductCommandValidatorTests`: reglas de entrada válidas e inválidas.
 - `CreateProductCommandHandlerTests`: orquestación sin base de datos mediante dobles de repositorio.
 - `ArchitectureDependencyTests`: impide referencias prohibidas desde Domain y Application.
+- `ProductsEndpointsTests`: inicia la API en memoria y recorre por HTTP validación 400, creación 201, consulta, edición, filtro de stock bajo, ajuste y eliminación 204. Reemplaza únicamente la persistencia por un store de prueba; conserva controllers, model binding, JSON, MediatR, FluentValidation, handlers y manejo global de excepciones.

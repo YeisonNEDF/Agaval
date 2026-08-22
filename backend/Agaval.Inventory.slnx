@@ -6,6 +6,7 @@
     <Project Path="src/Agaval.Inventory.Infrastructure/Agaval.Inventory.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Agaval.Inventory.Api.FunctionalTests/Agaval.Inventory.Api.FunctionalTests.csproj" />
     <Project Path="tests/Agaval.Inventory.Application.UnitTests/Agaval.Inventory.Application.UnitTests.csproj" />
     <Project Path="tests/Agaval.Inventory.Domain.UnitTests/Agaval.Inventory.Domain.UnitTests.csproj" />
   </Folder>
