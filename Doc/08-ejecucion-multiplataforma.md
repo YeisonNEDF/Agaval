@@ -42,7 +42,7 @@ Detectar sistema operativo
 Leer/crear .env
         |
         v
-¿.NET SDK 10 + Node 20/npm + SQL Server accesible?
+¿.NET SDK 10 + Node compatible/npm + SQL Server accesible?
        / \
      sí   no
      /     \
@@ -64,12 +64,12 @@ La selección puede controlarse mediante `RUN_MODE` en `.env` o mediante un argu
 
 | Sistema | Modo automático | Nativo sin Docker | Docker |
 | --- | --- | --- | --- |
-| Windows 10/11 | LocalDB si están .NET y Node; de lo contrario Docker | .NET 10, Node 20+ y LocalDB o SQL Server configurado | Docker Desktop |
-| macOS Intel | Conexión SQL configurada si existe; de lo contrario Docker | .NET 10, Node 20+ y SQL Server remoto | Docker Desktop |
-| macOS Apple Silicon | Igual que macOS Intel | .NET 10, Node 20+ y SQL Server remoto | Docker Desktop con emulación de la imagen SQL x86-64 |
-| Linux x86-64 | Conexión SQL configurada si existe; de lo contrario Docker | .NET 10, Node 20+ y SQL Server local soportado o remoto | Docker Engine + plugin Compose |
-| Linux ARM64 | Conexión SQL remota si existe; de lo contrario Docker solo si el entorno admite la imagen | .NET 10, Node 20+ y SQL Server remoto | SQL Server oficial no publica una imagen ARM64 nativa |
-| WSL 2 | Conexión SQL configurada si existe; de lo contrario Docker | .NET 10, Node 20+ y SQL Server accesible desde WSL | Docker Desktop con integración WSL |
+| Windows 10/11 | LocalDB si están .NET y Node; de lo contrario Docker | .NET 10, Node 20.19+/22.12+/24.x y LocalDB o SQL Server configurado | Docker Desktop |
+| macOS Intel | Conexión SQL configurada si existe; de lo contrario Docker | .NET 10, Node 20.19+/22.12+/24.x y SQL Server remoto | Docker Desktop |
+| macOS Apple Silicon | Igual que macOS Intel | .NET 10, Node 20.19+/22.12+/24.x y SQL Server remoto | Docker Desktop con emulación de la imagen SQL x86-64 |
+| Linux x86-64 | Conexión SQL configurada si existe; de lo contrario Docker | .NET 10, Node 20.19+/22.12+/24.x y SQL Server local soportado o remoto | Docker Engine + plugin Compose |
+| Linux ARM64 | Conexión SQL remota si existe; de lo contrario Docker solo si el entorno admite la imagen | .NET 10, Node 20.19+/22.12+/24.x y SQL Server remoto | SQL Server oficial no publica una imagen ARM64 nativa |
+| WSL 2 | Conexión SQL configurada si existe; de lo contrario Docker | .NET 10, Node 20.19+/22.12+/24.x y SQL Server accesible desde WSL | Docker Desktop con integración WSL |
 
 ### Límite técnico de macOS y ARM
 
@@ -150,6 +150,8 @@ Paquetes usados por la instalación asistida:
 | Docker Desktop | `Docker.DockerDesktop` | Modo Docker o Auto sin ruta nativa completa. |
 
 Los comandos aceptan los acuerdos de origen y paquete de WinGet para permitir una instalación no interactiva, pero el launcher informa el paquete antes de ejecutarlo. `-NoInstall` desactiva totalmente ese comportamiento.
+
+Angular 20.3 admite Node.js `^20.19.0`, `^22.12.0` o `^24.0.0`. El launcher rechaza versiones impares/no soportadas —por ejemplo Node 25— y recomienda la edición LTS, evitando fallos posteriores de Angular CLI.
 
 ### macOS, Linux o SQL Server externo
 

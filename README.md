@@ -30,7 +30,7 @@ Agaval/
 El modo `Auto` detecta el sistema operativo y usa la opción más directa disponible:
 
 1. carga o crea `.env` desde `.env.example`;
-2. comprueba .NET 10, Node.js 20+ y una conexión SQL Server configurada;
+2. comprueba .NET 10, una versión de Node.js soportada por Angular 20 y una conexión SQL Server configurada;
 3. si los tres requisitos nativos existen, ejecuta API y Angular directamente en el host;
 4. si la ruta nativa no está completa, usa Docker Compose como entorno reproducible;
 5. en Windows, si tampoco existe Docker, intenta instalar Docker Desktop con WinGet;
@@ -80,10 +80,10 @@ Los launchers guardan PID y logs nativos en `.run/`; esa carpeta no se versiona.
 
 | Plataforma | Modo Docker | Modo nativo |
 | --- | --- | --- |
-| macOS Intel/Apple Silicon | Docker Desktop | .NET 10, Node 20+ y SQL Server remoto mediante `NATIVE_DATABASE_CONNECTION`. SQL Server no tiene motor nativo para macOS. |
-| Windows 10/11 | Docker Desktop | .NET 10, Node 20+ y LocalDB o una conexión SQL Server explícita. |
-| Linux x86-64 | Docker Engine + Compose | .NET 10, Node 20+ y SQL Server instalado/remoto. |
-| WSL 2 | Docker Desktop con integración WSL | .NET 10, Node 20+ y una conexión SQL Server explícita. |
+| macOS Intel/Apple Silicon | Docker Desktop | .NET 10, Node 20.19+/22.12+/24.x y SQL Server remoto mediante `NATIVE_DATABASE_CONNECTION`. SQL Server no tiene motor nativo para macOS. |
+| Windows 10/11 | Docker Desktop | .NET 10, Node 20.19+/22.12+/24.x y LocalDB o una conexión SQL Server explícita. |
+| Linux x86-64 | Docker Engine + Compose | .NET 10, Node 20.19+/22.12+/24.x y SQL Server instalado/remoto. |
+| WSL 2 | Docker Desktop con integración WSL | .NET 10, Node 20.19+/22.12+/24.x y una conexión SQL Server explícita. |
 
 Docker evita instalar .NET, Node y SQL Server por separado. En macOS/Windows se instala desde [Docker Desktop](https://docs.docker.com/get-started/get-docker/); en Linux se usa [Docker Engine](https://docs.docker.com/engine/install/) con el plugin Compose.
 

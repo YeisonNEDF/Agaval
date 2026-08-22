@@ -12,7 +12,7 @@ Los controladores no conocen EF Core. Traducen HTTP a Commands o Queries y los e
 
 En Angular, la página coordina diálogos, el store mantiene estado con Signals, los servicios encapsulan HTTP y los componentes de presentación reciben datos/emiten intenciones. Cada componente tiene archivos separados de TypeScript, HTML, SCSS y pruebas. `shared` contiene recursos reutilizables que no conocen la feature; `core` contiene infraestructura global.
 
-La entrega se puede levantar con un único comando. El launcher usa ejecución nativa si detecta .NET 10, Node 20+ y SQL Server; de lo contrario usa Docker Compose. EF Core crea la base, aplica la migración y carga seeds idempotentes.
+La entrega se puede levantar con un único comando. El launcher usa ejecución nativa si detecta .NET 10, una versión de Node soportada por Angular 20 y SQL Server; de lo contrario usa Docker Compose. EF Core crea la base, aplica la migración y carga seeds idempotentes.
 
 ## Recorrido recomendado para el revisor
 

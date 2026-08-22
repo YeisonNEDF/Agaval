@@ -98,6 +98,8 @@ El launcher PowerShell se ejecutó con PowerShell 7.6.5 siguiendo el mismo recor
 
 La instalación asistida añadió verificaciones no destructivas `--check`/`-Check -NoInstall`. Localmente se validaron la sintaxis POSIX, el diagnóstico shell, el parseo completo de PowerShell 7.6.2, su diagnóstico y la resolución de Compose. CI ejecuta además `start.ps1` y `start.cmd` sobre `windows-latest`; esta comprobación confirma detección y mensajes en Windows sin instalar paquetes en el runner. La rama que invoca WinGet queda deliberadamente fuera de CI porque cambiaría el sistema anfitrión y puede requerir elevación o reinicio.
 
+Después de reproducir un fallo de detección en Windows con Node 25, se eliminó la evaluación JavaScript usada para obtener la versión y se reemplazó por `node --version`. El diagnóstico se verificó con Node 22.19.0 y se declaró en `package.json` el rango oficial de Angular 20.3. La pasada posterior mantuvo lint limpio, 20 pruebas frontend aprobadas y build de producción exitoso.
+
 La prueba Docker se ejecutó en macOS Apple Silicon mediante emulación `linux/amd64`. Es válida como evidencia funcional de desarrollo, pero no convierte esa combinación en una plataforma SQL Server soportada oficialmente por Microsoft; la distinción se explica en `Doc/08-ejecucion-multiplataforma.md`.
 
 Si una ejecución posterior cambia estos valores, el resultado de CI es la fuente de verdad y debe corregirse antes de desplegar.

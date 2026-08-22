@@ -17,6 +17,7 @@ $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RunDirectory = Join-Path $ProjectRoot ".run"
 $script:DotnetExecutable = $null
 $script:NpmExecutable = $null
+$script:NodeVersion = $null
 $script:NativeConnection = $null
 $script:NativeMissing = $null
 $script:ActiveMode = $null
@@ -221,23 +222,35 @@ function Get-Dotnet10Executable {
 }
 
 function Get-CompatibleNpmExecutable {
+    $script:NodeVersion = $null
     $nodeCommand = Get-Command node -ErrorAction SilentlyContinue
     $npmCommand = Get-Command npm.cmd -ErrorAction SilentlyContinue
     if ($null -eq $npmCommand) {
         $npmCommand = Get-Command npm -ErrorAction SilentlyContinue
     }
 
-    if ($null -eq $nodeCommand -or $null -eq $npmCommand) {
+    if ($null -eq $nodeCommand) {
         return $null
     }
 
-    try {
-        $majorVersion = [int](& $nodeCommand.Source -p 'Number(process.versions.node.split(".")[0])')
-    } catch {
+    $versionText = [string](& $nodeCommand.Source --version 2>$null | Select-Object -First 1)
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($versionText)) {
         return $null
     }
 
-    if ($majorVersion -lt 20) {
+    $normalizedVersion = $versionText.Trim().TrimStart([char]"v")
+    $parsedVersion = $null
+    if (-not [version]::TryParse($normalizedVersion, [ref]$parsedVersion)) {
+        return $null
+    }
+
+    $script:NodeVersion = $parsedVersion.ToString()
+    $isSupportedVersion =
+        (($parsedVersion.Major -eq 20) -and ($parsedVersion -ge [version]"20.19.0")) -or
+        (($parsedVersion.Major -eq 22) -and ($parsedVersion -ge [version]"22.12.0")) -or
+        ($parsedVersion.Major -eq 24)
+
+    if (-not $isSupportedVersion -or $null -eq $npmCommand) {
         return $null
     }
 
@@ -284,7 +297,11 @@ function Test-NativeRequirements([switch]$DoNotStartServices) {
         $missing.Add(".NET SDK 10")
     }
     if ($null -eq $script:NpmExecutable) {
-        $missing.Add("Node.js 20+ y npm")
+        if ($null -ne $script:NodeVersion) {
+            $missing.Add("Node.js compatible con Angular 20 (detectado $script:NodeVersion; use 20.19+, 22.12+ o 24.x) y npm")
+        } else {
+            $missing.Add("Node.js compatible con Angular 20 (20.19+, 22.12+ o 24.x) y npm")
+        }
     }
     if ([string]::IsNullOrWhiteSpace($script:NativeConnection)) {
         $missing.Add("SQL Server LocalDB o NATIVE_DATABASE_CONNECTION")
@@ -348,8 +365,8 @@ function Show-RequirementReport([switch]$DoNotStartServices) {
             Uso = "Modo nativo"
         },
         [PSCustomObject]@{
-            Requisito = "Node.js 20+ y npm"
-            Estado = $(if ($null -ne $script:NpmExecutable) { "LISTO" } else { "FALTA" })
+            Requisito = "Node.js compatible + npm"
+            Estado = $(if ($null -ne $script:NpmExecutable) { "LISTO ($script:NodeVersion)" } elseif ($null -ne $script:NodeVersion) { "NO SOPORTADO ($script:NodeVersion)" } else { "FALTA" })
             Uso = "Modo nativo"
         },
         [PSCustomObject]@{

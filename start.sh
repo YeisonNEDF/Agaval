@@ -104,12 +104,23 @@ find_dotnet_10() {
   return 1
 }
 
-find_node_20() {
+find_compatible_node() {
   command -v node >/dev/null 2>&1 || return 1
   command -v npm >/dev/null 2>&1 || return 1
 
-  node_major=$(node -p 'Number(process.versions.node.split(".")[0])' 2>/dev/null || printf '0')
-  [ "$node_major" -ge 20 ] || return 1
+  node_version=$(node --version 2>/dev/null || printf '')
+  node_version=${node_version#v}
+  node_major=${node_version%%.*}
+  node_remainder=${node_version#*.}
+  node_minor=${node_remainder%%.*}
+
+  case "$node_major:$node_minor" in
+    20:*) [ "$node_minor" -ge 19 ] 2>/dev/null || return 1 ;;
+    22:*) [ "$node_minor" -ge 12 ] 2>/dev/null || return 1 ;;
+    24:*) ;;
+    *) return 1 ;;
+  esac
+
   NPM_EXEC=$(command -v npm)
 }
 
@@ -125,11 +136,11 @@ native_is_ready() {
     native_missing=".NET SDK 10"
   fi
 
-  if ! find_node_20; then
+  if ! find_compatible_node; then
     if [ -n "$native_missing" ]; then
-      native_missing="$native_missing, Node.js 20+ y npm"
+      native_missing="$native_missing, Node.js compatible con Angular 20 (20.19+, 22.12+ o 24.x) y npm"
     else
-      native_missing="Node.js 20+ y npm"
+      native_missing="Node.js compatible con Angular 20 (20.19+, 22.12+ o 24.x) y npm"
     fi
   fi
 
