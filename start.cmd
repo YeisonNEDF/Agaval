@@ -1,5 +1,6 @@
 @echo off
 setlocal
+chcp 65001 >nul
 where powershell.exe >nul 2>nul
 if errorlevel 1 (
   echo [ERROR] No se encontro Windows PowerShell.

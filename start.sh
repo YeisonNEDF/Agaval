@@ -438,7 +438,21 @@ forward_to_windows() {
   [ "$ACTION" = "check" ] && set -- "$@" -Check
   [ "$NO_INSTALL" = "true" ] && set -- "$@" -NoInstall
   printf 'Windows detectado: se delega el diagnóstico y la instalación asistida a start.ps1.\n'
-  exec powershell.exe "$@"
+
+  if powershell.exe "$@"; then
+    exit 0
+  else
+    windows_exit_code=$?
+  fi
+
+  printf '\nEl inicio terminó con un error. El detalle quedó en .run/launcher-error.log.\n' >&2
+
+  if [ -t 0 ]; then
+    printf 'Presione Enter para cerrar esta ventana...' >&2
+    IFS= read -r _ || true
+  fi
+
+  exit "$windows_exit_code"
 }
 
 while [ "$#" -gt 0 ]; do

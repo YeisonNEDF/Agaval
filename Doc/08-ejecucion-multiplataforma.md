@@ -33,6 +33,8 @@ Desde PowerShell:
 
 Al abrir `start.cmd` se ve primero un diagnóstico. Si falta una ruta ejecutable, el launcher anuncia el paquete exacto, lo instala con WinGet, actualiza el `PATH` del proceso y repite la comprobación. El instalador puede mostrar una solicitud de administrador. Si Windows requiere cerrar la terminal, completar WSL 2 o reiniciar, el mensaje final indica el siguiente paso y `start.cmd` mantiene la ventana abierta.
 
+Cuando `start.sh` se ejecuta mediante Git Bash/MSYS/Cygwin, delega en PowerShell sin perder el código de salida. Ante un fallo, conserva la ventana hasta que se presione Enter y señala `.run/launcher-error.log`, donde queda el mensaje completo con fecha y modo solicitado. La salida de Windows se configura en UTF-8 para preservar los acentos.
+
 ## Algoritmo del modo automático
 
 ```text
@@ -250,6 +252,12 @@ En Windows:
 ```
 
 Las causas habituales son conexión SQL inválida, contraseña que no cumple la política de SQL Server, puerto ocupado o permisos insuficientes para migrar.
+
+Si la ventana se abrió desde el Explorador o mediante Git Bash y ya se cerró, consultar el último error persistido:
+
+```powershell
+Get-Content .\.run\launcher-error.log
+```
 
 ### PowerShell bloquea scripts
 

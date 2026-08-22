@@ -27,8 +27,38 @@ $script:DockerEngineReady = $false
 
 Set-Location $ProjectRoot
 
+if ($env:OS -eq "Windows_NT") {
+    try {
+        $utf8Encoding = New-Object System.Text.UTF8Encoding($false)
+        [Console]::InputEncoding = $utf8Encoding
+        [Console]::OutputEncoding = $utf8Encoding
+        $OutputEncoding = $utf8Encoding
+    } catch {
+        # Algunos hosts sin consola no permiten cambiar la codificación.
+    }
+}
+
 trap {
-    Write-Host $_.Exception.Message -ForegroundColor Red
+    $errorRecord = $_
+    $errorMessage = $errorRecord.Exception.Message
+
+    try {
+        New-Item -ItemType Directory -Force -Path $RunDirectory | Out-Null
+        $errorLogPath = Join-Path $RunDirectory "launcher-error.log"
+        @(
+            "Fecha: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss K')"
+            "Modo solicitado: $Mode"
+            "Mensaje: $errorMessage"
+            ""
+            "Detalle:"
+            ($errorRecord | Out-String)
+        ) | Set-Content -Encoding UTF8 $errorLogPath
+        Write-Host "Detalle persistente: $errorLogPath" -ForegroundColor Yellow
+    } catch {
+        Write-Host "No fue posible escribir .run\launcher-error.log." -ForegroundColor Yellow
+    }
+
+    Write-Host $errorMessage -ForegroundColor Red
     exit 1
 }
 
