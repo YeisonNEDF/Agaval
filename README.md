@@ -5,13 +5,14 @@ Solución full stack de la prueba técnica: API REST en .NET 10 con Clean Archit
 ## Funcionalidad incluida
 
 - CRUD completo de productos.
-- Categorías activas precargadas y selección desde el formulario.
-- Filtros por categoría y estado de stock.
+- CRUD de categorías con activación/desactivación lógica y selección de categorías activas.
+- Búsqueda, filtros, ordenamiento y paginación ejecutados en SQL Server.
 - Consulta específica de productos con stock bajo.
-- Entradas y salidas de inventario con historial persistente.
+- Entradas y salidas de inventario con historial persistente y pantalla paginada.
+- Autenticación JWT y autorización por rol para todas las operaciones de escritura.
 - Validación de dominio, FluentValidation y formularios tipados.
-- Problem Details, Swagger, health check, pruebas automatizadas y pipeline CI.
-- Migración/seed automático en desarrollo, Docker Compose y recursos Kubernetes.
+- Problem Details, Swagger protegido, health check, 43 pruebas automatizadas y pipeline CI.
+- Migración/seed automático en desarrollo, Docker Compose, Kubernetes y despliegue Azure preparado.
 
 ## Estructura
 
@@ -21,7 +22,8 @@ Agaval/
 ├── frontend/                Angular 20 y Angular Material
 ├── Doc/                     análisis y documentación técnica
 ├── infra/k8s/               recursos declarativos de Kubernetes
-├── .github/workflows/       integración continua
+├── infra/azure/             infraestructura Bicep para Azure
+├── .github/workflows/       integración continua y despliegue manual
 └── docker-compose.yml       aplicación + SQL Server local
 ```
 
@@ -80,6 +82,13 @@ Para revisar el equipo sin instalar ni arrancar nada:
 
 Los launchers guardan PID y logs nativos en `.run/`; esa carpeta no se versiona. En Docker, los datos persisten en el volumen `agaval_sqlserver-data`.
 
+Al finalizar, la consulta del inventario y del historial está disponible sin iniciar sesión. Para crear, editar, eliminar o ajustar existencias use la cuenta local de evaluación:
+
+```text
+Usuario: admin
+Contraseña: Agaval_admin_2026!
+```
+
 ### Requisitos por modo
 
 | Plataforma | Modo Docker | Modo nativo |
@@ -113,6 +122,12 @@ Docker evita instalar .NET, Node y SQL Server por separado. En macOS/Windows se 
 | `APPLY_MIGRATIONS_ON_STARTUP` | `true` | Aplica migración y seed al iniciar. |
 | `PUBLIC_HOST` | `localhost` | Host que se muestra al finalizar. |
 | `NATIVE_DATABASE_CONNECTION` | vacío | Conexión necesaria para modo nativo fuera de LocalDB. |
+| `AUTH_ISSUER` | `Agaval.Inventory.Api` | Emisor aceptado por JWT. |
+| `AUTH_AUDIENCE` | `Agaval.Inventory.Frontend` | Audiencia aceptada por JWT. |
+| `AUTH_JWT_SIGNING_KEY` | clave local de ejemplo | Firma HMAC del token; mínimo 32 caracteres. |
+| `AUTH_USERNAME` / `AUTH_PASSWORD` | cuenta local de evaluación | Credenciales del único usuario configurable. |
+| `AUTH_ROLE` | `InventoryManager` | Rol autorizado para escrituras. |
+| `AUTH_TOKEN_LIFETIME_MINUTES` | `120` | Vigencia de la sesión. |
 
 Ejemplo nativo para un SQL Server local/remoto:
 
@@ -121,7 +136,7 @@ RUN_MODE=native
 NATIVE_DATABASE_CONNECTION=Server=localhost,1433;Database=GestorInventarioDB;User Id=sa;Password=SU_CLAVE;Encrypt=True;TrustServerCertificate=True
 ```
 
-El archivo `.env` es local y está ignorado por Git; `.env.example` es la plantilla pública. La API ejecuta `MigrateAsync`, crea la base, aplica migraciones y carga datos de demostración de forma idempotente.
+El repositorio incluye `.env` y `.env.example` con valores exclusivamente locales para que la evaluación sea inmediata, según la decisión de entrega. Para un ambiente real se deben reemplazar todas las credenciales y almacenarlas en secretos de la plataforma. La API ejecuta `MigrateAsync`, crea la base, aplica migraciones y carga datos de demostración de forma idempotente.
 
 Para eliminar deliberadamente todos los datos Docker y empezar desde cero:
 
@@ -169,3 +184,4 @@ Si una base está parcialmente dañada —por ejemplo, se borró una tabla pero 
 - [`Doc/06-pruebas-y-calidad.md`](Doc/06-pruebas-y-calidad.md): evidencia de calidad.
 - [`Doc/07-guia-entrevista-y-revision.md`](Doc/07-guia-entrevista-y-revision.md): recorrido, discurso y preguntas de revisión.
 - [`Doc/08-ejecucion-multiplataforma.md`](Doc/08-ejecucion-multiplataforma.md): ejecución nativa/Docker y diagnóstico por sistema.
+- [`Doc/09-funcionalidades-opcionales.md`](Doc/09-funcionalidades-opcionales.md): CRUD de categorías, historial, JWT, paginación, pruebas y Azure.

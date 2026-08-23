@@ -15,7 +15,7 @@ Representa una violación de invariantes del negocio. Permite distinguir una ent
 
 ### `Entities/Category.cs`
 
-Modela una categoría precargada con `Id`, `Name` y `IsActive`. Su constructor exige un identificador positivo e impide nombres vacíos o superiores a 100 caracteres.
+Modela una categoría con `Id`, `Name` y `IsActive`. Normaliza el nombre, impide valores vacíos o superiores a 100 caracteres y expone `Update`/`Deactivate` para el CRUD con baja lógica.
 
 ### `Entities/Product.cs`
 
@@ -39,8 +39,10 @@ Enum tipado `Entry/Exit`. API lo serializa como texto; Infrastructure lo convier
 
 ### Puertos de persistencia
 
-- `IProductRepository`: búsquedas con filtros, búsqueda por id, alta y baja.
-- `ICategoryRepository`: categorías activas y comprobación de categoría válida.
+- `IProductRepository`: consulta paginada/ordenada, resumen, búsqueda por id, alta y baja.
+- `ICategoryRepository`: listado completo o activo, búsqueda, unicidad, alta y actualización.
+- `IInventoryMovementRepository`: historial paginado por producto y tipo.
+- `IIdentityService`: valida la identidad configurable y emite un token sin acoplar Application a JWT.
 - `IUnitOfWork`: frontera explícita de confirmación con `SaveChangesAsync`.
 
 Las interfaces viven en Application; Infrastructure depende de ellas, no al contrario.
@@ -53,14 +55,20 @@ Las interfaces viven en Application; Infrastructure depende de ellas, no al cont
 
 - `ApplicationValidationException`: errores de forma o reglas anticipables, convertidos a HTTP 400.
 - `NotFoundException`: recurso inexistente, convertido a HTTP 404.
+- `ConflictException`: duplicados o conflictos funcionales, convertido a HTTP 409.
+- `AuthenticationFailedException`: credenciales inválidas, convertido a HTTP 401.
 
 ### Modelos comunes
 
-`ProductFilter` y `StockFilter` expresan filtros sin términos de EF. `ProductDto` y `CategoryDto` son contratos de salida y evitan exponer entidades rastreadas o navegaciones internas.
+`ProductFilter`, `InventoryMovementFilter`, `StockFilter`, `ProductSortField` y `SortDirection` expresan consultas sin términos de EF. `PagedResult<T>` normaliza metadatos de página. Los DTO evitan exponer entidades rastreadas o navegaciones internas.
 
 ### Categories
 
-`GetActiveCategoriesQuery` y su Handler consultan únicamente categorías activas y las proyectan a DTO. No se implementa CRUD porque es opcional en la prueba.
+Los slices `GetList`, `GetById`, `Create`, `Update` y `Delete` cubren el CRUD. La creación/edición valida unicidad sin distinguir mayúsculas. `Delete` desactiva la fila para conservar integridad con productos; el endpoint de categorías activas continúa alimentando formularios.
+
+### Authentication y movimientos
+
+`LoginCommand` valida credenciales y proyecta la sesión firmada. `GetInventoryMovementsQuery` valida filtros/página y devuelve movimientos con producto, tipo, cantidad, fecha y observación.
 
 ### Products/Create
 
@@ -70,7 +78,7 @@ Las interfaces viven en Application; Infrastructure depende de ellas, no al cont
 
 ### Products/GetList y GetById
 
-`GetProductsQuery` valida y transforma los parámetros HTTP en `ProductFilter`. El repositorio aplica la consulta en servidor con `AsNoTracking`. `GetProductByIdQuery` devuelve un único producto o `NotFoundException`.
+`GetProductsQuery` valida y transforma búsqueda, categoría, stock, página, tamaño, campo de orden y dirección en `ProductFilter`. El repositorio ejecuta `COUNT`, orden y `Skip/Take` en SQL Server. `GetProductByIdQuery` devuelve un único producto o `NotFoundException`; `GetInventorySummaryQuery` calcula métricas globales aparte de la página visible.
 
 ### Products/GetLowStock
 
@@ -108,7 +116,11 @@ Los mapeos son explícitos: un cambio de convención de EF no modifica silencios
 
 ### Repositorios
 
-`ProductRepository` encapsula includes, filtros, ordenamiento y tracking. Las lecturas usan `AsNoTracking`; las operaciones que cambian el agregado conservan tracking. `CategoryRepository` restringe las consultas a categorías activas.
+`ProductRepository` encapsula includes, filtros, búsqueda, ordenamiento, paginación y tracking. Las lecturas usan `AsNoTracking`; las operaciones que cambian el agregado conservan tracking. `CategoryRepository` implementa el catálogo administrable y `InventoryMovementRepository` proyecta el historial cronológico.
+
+### Autenticación configurable
+
+`AuthenticationOptions` valida configuración obligatoria y una clave mínima de 32 caracteres. `ConfiguredIdentityService` compara credenciales en tiempo constante y firma JWT HS256 con issuer, audience, expiración y rol. No simula una gestión completa de usuarios: es una identidad local reemplazable mediante `IIdentityService`.
 
 ### Composición y diseño
 
@@ -122,7 +134,7 @@ Los mapeos son explícitos: un cambio de convención de EF no modifica silencios
 
 ### Contratos HTTP
 
-`CreateProductRequest`, `UpdateProductRequest` y `AdjustStockRequest` representan el JSON de entrada. Se mantienen separados de los Commands para que la evolución de HTTP no contamine Application.
+Los requests de productos, categorías y login representan el JSON de entrada. Se mantienen separados de los Commands para que la evolución de HTTP no contamine Application.
 
 Los records de transporte no duplican reglas mediante Data Annotations. Cada acción los transforma en Commands y el pipeline de FluentValidation conserva una única fuente de verdad para longitudes, rangos, enum y campos obligatorios. Esto evita divergencias y es compatible con el model binding de records posicionales en ASP.NET Core 10.
 
@@ -130,7 +142,8 @@ Los records de transporte no duplican reglas mediante Data Annotations. Cada acc
 
 | Método | Ruta | Caso de uso |
 |---|---|---|
-| GET | `/api/productos` | Lista y filtra productos |
+| GET | `/api/productos` | Busca, filtra, ordena y pagina productos |
+| GET | `/api/productos/resumen` | Calcula métricas globales |
 | GET | `/api/productos/stock-bajo` | Lista stock bajo |
 | GET | `/api/productos/{id}` | Obtiene detalle |
 | POST | `/api/productos` | Crea y responde 201 |
@@ -142,17 +155,21 @@ Cada acción solo traduce el request a un mensaje MediatR y traduce el resultado
 
 ### `CategoriesController.cs`
 
-Expone `GET /api/categorias`, suficiente para poblar la lista del formulario y el filtro.
+Expone listado, detalle, alta, edición y baja lógica. Las escrituras requieren `InventoryWrite`; `incluirInactivas=true` permite administrar todo el catálogo.
+
+### `AuthenticationController.cs` e `InventoryMovementsController.cs`
+
+El primero entrega la sesión JWT mediante `POST /api/autenticacion/login`. El segundo consulta el historial con `productoId`, `tipo`, `pagina` y `tamanoPagina`.
 
 ### `GlobalExceptionHandler.cs`
 
-Convierte validaciones e invariantes de dominio a 400, ausencias a 404, conflictos de concurrencia a 409 y errores inesperados a 500. La respuesta estándar incluye `traceId`; los detalles internos no se filtran al cliente.
+Convierte validaciones e invariantes de dominio a 400, autenticación fallida a 401, ausencias a 404, duplicados/conflictos a 409 y errores inesperados a 500. La respuesta estándar incluye `traceId`; los detalles internos no se filtran al cliente.
 
 ### Infraestructura HTTP
 
 - `CorsPolicies.cs` nombra la política global.
 - `DatabaseInitializationExtensions.cs` detecta migraciones pendientes y ejecuta `MigrateAsync` cuando el ambiente lo autoriza. Está activo en Development y Compose, y desactivado en producción por defecto.
-- `Program.cs` es el composition root: registra capas, JSON enums, Problem Details, Swagger, health, CORS y controllers.
+- `Program.cs` es el composition root: registra capas, JWT Bearer, política por rol, JSON enums, Problem Details, Swagger con esquema bearer, health, CORS y controllers.
 - `Agaval.Inventory.Api.http` contiene llamadas manuales reproducibles.
 
 ## Pruebas backend
@@ -161,4 +178,8 @@ Convierte validaciones e invariantes de dominio a 400, ausencias a 404, conflict
 - `CreateProductCommandValidatorTests`: reglas de entrada válidas e inválidas.
 - `CreateProductCommandHandlerTests`: orquestación sin base de datos mediante dobles de repositorio.
 - `ArchitectureDependencyTests`: impide referencias prohibidas desde Domain y Application.
-- `ProductsEndpointsTests`: inicia la API en memoria y recorre por HTTP validación 400, creación 201, consulta, edición, filtro de stock bajo, ajuste y eliminación 204. Reemplaza únicamente la persistencia por un store de prueba; conserva controllers, model binding, JSON, MediatR, FluentValidation, handlers y manejo global de excepciones.
+- `ProductsEndpointsTests`: recorre por HTTP autorización, validación, CRUD, stock bajo, ajuste, historial, paginación y resumen.
+- `CategoriesEndpointsTests`: demuestra 401, alta, conflicto por nombre, edición y desactivación persistida.
+- `AuthenticationEndpointsTests`: rechaza credenciales inválidas y valida la sesión JWT.
+
+La verificación actual ejecuta 17 pruebas .NET: 9 de dominio, 5 de Application y 3 funcionales.

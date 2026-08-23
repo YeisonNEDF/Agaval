@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.category-form {
+  &__header {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 1.6rem 1.6rem 0;
+
+    p,
+    h2 {
+      margin: 0;
+    }
+
+    p {
+      color: var(--color-primary);
+      font-size: 0.72rem;
+      font-weight: 750;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      padding: 0;
+      color: var(--color-text);
+      font-size: 1.45rem;
+      letter-spacing: -0.03em;
+    }
+  }
+
+  &__icon {
+    display: grid;
+    width: 2.8rem;
+    height: 2.8rem;
+    place-items: center;
+    border-radius: 0.95rem;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+  }
+
+  &__body {
+    display: grid;
+    min-width: min(26rem, calc(100vw - 5rem));
+    gap: 1rem;
+    padding-top: 0.5rem;
+  }
+}
+
+mat-dialog-content {
+  padding-top: 1.25rem;
+}
+
+mat-dialog-actions {
+  gap: 0.5rem;
+  padding: 0.75rem 1.6rem 1.5rem;
+}

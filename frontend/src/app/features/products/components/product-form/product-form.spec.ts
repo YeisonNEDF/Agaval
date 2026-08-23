@@ -11,7 +11,7 @@ describe('ProductFormComponent', () => {
     closeSpy = jasmine.createSpy('close');
     const data: ProductFormDialogData = {
       product: null,
-      categories: [{ id: 1, name: 'Electrónica' }],
+      categories: [{ id: 1, name: 'Electrónica', isActive: true }],
     };
 
     await TestBed.configureTestingModule({

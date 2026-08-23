@@ -1,0 +1,45 @@
+<div class="categories-page">
+  <app-page-header
+    eyebrow="Catálogo maestro"
+    title="Gestión de categorías"
+    description="Administre las clasificaciones disponibles sin perder las relaciones históricas de los productos."
+  >
+    <button mat-flat-button type="button" [disabled]="store.saving()" (click)="openForm(null)">
+      <mat-icon aria-hidden="true">add</mat-icon>
+      Nueva categoría
+    </button>
+  </app-page-header>
+
+  <section class="categories-page__metrics" aria-label="Resumen de categorías">
+    <article>
+      <mat-icon aria-hidden="true">category</mat-icon>
+      <div><span>Activas</span><strong>{{ store.activeCount() }}</strong></div>
+    </article>
+    <article>
+      <mat-icon aria-hidden="true">block</mat-icon>
+      <div><span>Inactivas</span><strong>{{ store.inactiveCount() }}</strong></div>
+    </article>
+  </section>
+
+  @if (store.loading()) {
+    <section class="categories-page__loading" aria-live="polite">
+      <mat-spinner diameter="40" />
+      <strong>Cargando categorías</strong>
+    </section>
+  } @else if (store.error()) {
+    <app-empty-state icon="cloud_off" title="No pudimos cargar las categorías" [description]="store.error() ?? ''">
+      <button mat-flat-button type="button" (click)="store.load()">Reintentar</button>
+    </app-empty-state>
+  } @else if (store.categories().length === 0) {
+    <app-empty-state icon="category" title="No hay categorías" description="Cree la primera clasificación del catálogo.">
+      <button mat-flat-button type="button" (click)="openForm(null)">Crear categoría</button>
+    </app-empty-state>
+  } @else {
+    <app-category-list
+      [categories]="store.categories()"
+      [saving]="store.saving()"
+      (editRequested)="openForm($event)"
+      (deactivateRequested)="confirmDeactivate($event)"
+    />
+  }
+</div>

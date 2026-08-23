@@ -1,0 +1,58 @@
+<section class="login-page" aria-labelledby="login-title">
+  <mat-card class="login-card">
+    <div class="login-card__mark" aria-hidden="true">A</div>
+    <mat-card-header>
+      <mat-card-title id="login-title">Acceso administrativo</mat-card-title>
+      <mat-card-subtitle>
+        Inicie sesión para gestionar productos, categorías y existencias.
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form class="login-card__form" [formGroup]="form" (ngSubmit)="submit()">
+        <mat-form-field appearance="outline">
+          <mat-label>Usuario</mat-label>
+          <mat-icon matPrefix aria-hidden="true">person</mat-icon>
+          <input matInput formControlName="username" autocomplete="username" />
+          @if (form.controls.username.touched && form.controls.username.invalid) {
+            <mat-error>Ingrese el usuario.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña</mat-label>
+          <mat-icon matPrefix aria-hidden="true">lock</mat-icon>
+          <input
+            matInput
+            type="password"
+            formControlName="password"
+            autocomplete="current-password"
+          />
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <mat-error>Ingrese la contraseña.</mat-error>
+          }
+        </mat-form-field>
+
+        @if (authentication.error()) {
+          <p class="login-card__error" role="alert">
+            <mat-icon aria-hidden="true">error</mat-icon>
+            {{ authentication.error() }}
+          </p>
+        }
+
+        <button mat-flat-button type="submit" [disabled]="authentication.loading()">
+          @if (authentication.loading()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            <mat-icon aria-hidden="true">login</mat-icon>
+          }
+          <span>{{ authentication.loading() ? 'Validando…' : 'Iniciar sesión' }}</span>
+        </button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-footer>
+      <p>Las consultas son públicas. La sesión habilita las operaciones de escritura.</p>
+    </mat-card-footer>
+  </mat-card>
+</section>

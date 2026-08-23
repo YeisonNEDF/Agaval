@@ -739,6 +739,13 @@ function Start-NativeMode([string]$FrontendPort, [string]$BackendPort, [string]$
         "ConnectionStrings__Database" = $script:NativeConnection
         "Database__ApplyMigrationsOnStartup" = "true"
         "Cors__AllowedOrigins__0" = "http://localhost:$FrontendPort"
+        "Authentication__Issuer" = Get-EnvironmentValue "AUTH_ISSUER" "Agaval.Inventory.Api"
+        "Authentication__Audience" = Get-EnvironmentValue "AUTH_AUDIENCE" "Agaval.Inventory.Frontend"
+        "Authentication__SigningKey" = Get-EnvironmentValue "AUTH_JWT_SIGNING_KEY" "Agaval-development-signing-key-2026-change-me"
+        "Authentication__Username" = Get-EnvironmentValue "AUTH_USERNAME" "admin"
+        "Authentication__Password" = Get-EnvironmentValue "AUTH_PASSWORD" "Agaval_admin_2026!"
+        "Authentication__Role" = Get-EnvironmentValue "AUTH_ROLE" "InventoryManager"
+        "Authentication__TokenLifetimeMinutes" = Get-EnvironmentValue "AUTH_TOKEN_LIFETIME_MINUTES" "120"
     }
     $previousEnvironment = Set-ChildEnvironment $environmentValues
 

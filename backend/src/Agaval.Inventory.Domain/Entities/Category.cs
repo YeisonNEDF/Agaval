@@ -10,6 +10,12 @@ public sealed class Category
     {
     }
 
+    public Category(string name)
+    {
+        Name = NormalizeName(name);
+        IsActive = true;
+    }
+
     public Category(int id, string name, bool isActive = true)
     {
         if (id <= 0)
@@ -27,6 +33,14 @@ public sealed class Category
     public string Name { get; private set; } = string.Empty;
 
     public bool IsActive { get; private set; }
+
+    public void Update(string name, bool isActive)
+    {
+        Name = NormalizeName(name);
+        IsActive = isActive;
+    }
+
+    public void Deactivate() => IsActive = false;
 
     private static string NormalizeName(string name)
     {

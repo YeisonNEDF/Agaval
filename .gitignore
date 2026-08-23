@@ -1,7 +1,4 @@
-# Secrets
-.env
-.env.*
-!.env.example
+# La configuración local de evaluación (.env) se versiona por decisión de la entrega.
 
 # .NET
 **/bin/

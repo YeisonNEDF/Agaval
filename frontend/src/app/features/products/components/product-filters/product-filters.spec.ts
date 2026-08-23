@@ -11,8 +11,10 @@ describe('ProductFiltersComponent', () => {
       providers: [provideZonelessChangeDetection()],
     }).compileComponents();
     fixture = TestBed.createComponent(ProductFiltersComponent);
-    fixture.componentRef.setInput('categories', [{ id: 1, name: 'Electrónica' }]);
-    fixture.componentRef.setInput('filters', { categoryId: null, stock: 'all' });
+    fixture.componentRef.setInput('categories', [
+      { id: 1, name: 'Electrónica', isActive: true },
+    ]);
+    fixture.componentRef.setInput('filters', { categoryId: null, stock: 'all', search: '' });
     await fixture.whenStable();
   });
 
@@ -22,6 +24,6 @@ describe('ProductFiltersComponent', () => {
 
     fixture.componentInstance.changeCategory(1);
 
-    expect(emitted).toEqual([{ categoryId: 1, stock: 'all' }]);
+    expect(emitted).toEqual([{ categoryId: 1, stock: 'all', search: '' }]);
   });
 });

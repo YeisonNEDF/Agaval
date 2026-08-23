@@ -167,6 +167,16 @@
     }
   }
 
+  &__read-only {
+    padding: 0.35rem 0.6rem;
+    border-radius: 999px;
+    background: var(--color-surface-subtle);
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
   &__sr-only {
     position: absolute;
     width: 1px;

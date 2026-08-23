@@ -1,4 +1,5 @@
 @AgavalInventoryApi = http://localhost:5100
+@token = PEGAR_ACCESS_TOKEN_DEL_LOGIN
 
 GET {{AgavalInventoryApi}}/health
 Accept: application/json
@@ -10,12 +11,48 @@ Accept: application/json
 
 ###
 
-GET {{AgavalInventoryApi}}/api/productos?stock=All
+POST {{AgavalInventoryApi}}/api/autenticacion/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Agaval_admin_2026!"
+}
+
+###
+
+GET {{AgavalInventoryApi}}/api/productos?stock=All&buscar=&pagina=1&tamanoPagina=10&ordenarPor=Name&direccion=Ascending
 Accept: application/json
 
 ###
 
+GET {{AgavalInventoryApi}}/api/productos/resumen
+Accept: application/json
+
+###
+
+GET {{AgavalInventoryApi}}/api/movimientos-inventario?pagina=1&tamanoPagina=10
+Accept: application/json
+
+###
+
+GET {{AgavalInventoryApi}}/api/categorias?incluirInactivas=true
+Accept: application/json
+
+###
+
+POST {{AgavalInventoryApi}}/api/categorias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Ferretería"
+}
+
+###
+
 POST {{AgavalInventoryApi}}/api/productos
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -30,6 +67,7 @@ Content-Type: application/json
 ###
 
 POST {{AgavalInventoryApi}}/api/productos/1/ajustes-stock
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {

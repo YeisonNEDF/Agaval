@@ -8,16 +8,23 @@
         : 'Controle existencias, precios y niveles mínimos desde una vista clara y accionable.'
     "
   >
-    <button
-      mat-flat-button
-      type="button"
-      class="products-page__primary-action"
-      [disabled]="store.categories().length === 0 || store.saving()"
-      (click)="openCreateDialog()"
-    >
-      <mat-icon aria-hidden="true">add</mat-icon>
-      Nuevo producto
-    </button>
+    @if (authentication.isAuthenticated()) {
+      <button
+        mat-flat-button
+        type="button"
+        class="products-page__primary-action"
+        [disabled]="store.categories().length === 0 || store.saving()"
+        (click)="openCreateDialog()"
+      >
+        <mat-icon aria-hidden="true">add</mat-icon>
+        Nuevo producto
+      </button>
+    } @else {
+      <a mat-stroked-button routerLink="/login" class="products-page__primary-action">
+        <mat-icon aria-hidden="true">lock</mat-icon>
+        Ingresar para gestionar
+      </a>
+    }
   </app-page-header>
 
   <section class="products-page__metrics" aria-label="Resumen del inventario">
@@ -89,12 +96,20 @@
       (cleared)="clearFilters()"
     />
 
-    @if (store.filteredProducts().length > 0) {
+    @if (store.products().length > 0) {
       <app-product-list
-        [products]="store.filteredProducts()"
+        [products]="store.products()"
+        [totalCount]="store.totalCount()"
+        [pageNumber]="store.query().pageNumber"
+        [pageSize]="store.query().pageSize"
+        [sortBy]="store.query().sortBy"
+        [sortDirection]="store.query().sortDirection"
+        [canManage]="authentication.isAuthenticated()"
         (editRequested)="openEditDialog($event)"
         (stockAdjustmentRequested)="openStockDialog($event)"
         (deleteRequested)="confirmDelete($event)"
+        (pageChanged)="setPage($event)"
+        (sortChanged)="setSort($event)"
       />
     } @else {
       <section class="products-page__panel">
@@ -109,11 +124,13 @@
         >
           @if (store.hasActiveFilters()) {
             <button mat-button type="button" (click)="clearFilters()">Limpiar filtros</button>
-          } @else {
+          } @else if (authentication.isAuthenticated()) {
             <button mat-flat-button type="button" (click)="openCreateDialog()">
               <mat-icon aria-hidden="true">add</mat-icon>
               Crear producto
             </button>
+          } @else {
+            <a mat-flat-button routerLink="/login">Iniciar sesión</a>
           }
         </app-empty-state>
       </section>

@@ -7,7 +7,9 @@ public interface IProductRepository
 {
     Task<Product?> GetByIdAsync(int id, bool trackChanges, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<Product>> ListAsync(ProductFilter filter, CancellationToken cancellationToken);
+    Task<PagedResult<Product>> ListAsync(ProductFilter filter, CancellationToken cancellationToken);
+
+    Task<InventorySummary> GetSummaryAsync(CancellationToken cancellationToken);
 
     void Add(Product product);
 

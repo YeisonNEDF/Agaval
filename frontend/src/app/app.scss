@@ -67,6 +67,19 @@
     background: color-mix(in srgb, var(--color-surface-subtle) 88%, transparent);
   }
 
+  &__session {
+    flex: 0 0 auto;
+    min-height: 2.55rem;
+    margin-left: 0.7rem;
+    border-radius: 0.85rem;
+
+    span {
+      max-width: 8rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
   &__nav-link {
     min-height: 2.55rem;
     padding-inline: 0.9rem;
@@ -105,6 +118,10 @@
       width: min(calc(100% - 1.25rem), 78rem);
       padding-top: 1.5rem;
     }
+
+    &__session span {
+      display: none;
+    }
   }
 }
 
@@ -121,6 +138,16 @@
       .app-shell__nav-label {
         display: none;
       }
+    }
+
+    &__nav {
+      gap: 0;
+    }
+
+    &__session {
+      min-width: 2.7rem;
+      margin-left: 0.25rem;
+      padding-inline: 0.65rem;
     }
   }
 }

@@ -1,4 +1,5 @@
 using Agaval.Inventory.Api.Contracts.Products;
+using Agaval.Inventory.Api.Infrastructure;
 using Agaval.Inventory.Application.Common.Models;
 using Agaval.Inventory.Application.Features.Products;
 using Agaval.Inventory.Application.Features.Products.AdjustStock;
@@ -7,8 +8,10 @@ using Agaval.Inventory.Application.Features.Products.Delete;
 using Agaval.Inventory.Application.Features.Products.GetById;
 using Agaval.Inventory.Application.Features.Products.GetList;
 using Agaval.Inventory.Application.Features.Products.GetLowStock;
+using Agaval.Inventory.Application.Features.Products.GetSummary;
 using Agaval.Inventory.Application.Features.Products.Update;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Agaval.Inventory.Api.Controllers;
@@ -18,14 +21,28 @@ namespace Agaval.Inventory.Api.Controllers;
 public sealed class ProductsController(ISender sender) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType<IReadOnlyList<ProductDto>>(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<ProductDto>>> GetAll(
+    [ProducesResponseType<PagedResult<ProductDto>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<ProductDto>>> GetAll(
         [FromQuery] int? categoriaId,
         [FromQuery] StockFilter stock = StockFilter.All,
+        [FromQuery] string? buscar = null,
+        [FromQuery] int pagina = 1,
+        [FromQuery] int tamanoPagina = 10,
+        [FromQuery] ProductSortField ordenarPor = ProductSortField.Name,
+        [FromQuery] SortDirection direccion = SortDirection.Ascending,
         CancellationToken cancellationToken = default)
     {
         var products = await sender
-            .Send(new GetProductsQuery(categoriaId, stock), cancellationToken)
+            .Send(
+                new GetProductsQuery(
+                    categoriaId,
+                    stock,
+                    buscar,
+                    pagina,
+                    tamanoPagina,
+                    ordenarPor,
+                    direccion),
+                cancellationToken)
             .ConfigureAwait(false);
 
         return Ok(products);
@@ -43,6 +60,17 @@ public sealed class ProductsController(ISender sender) : ControllerBase
         return Ok(products);
     }
 
+    [HttpGet("resumen")]
+    [ProducesResponseType<InventorySummary>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<InventorySummary>> GetSummary(CancellationToken cancellationToken)
+    {
+        var summary = await sender
+            .Send(new GetInventorySummaryQuery(), cancellationToken)
+            .ConfigureAwait(false);
+
+        return Ok(summary);
+    }
+
     [HttpGet("{id:int}")]
     [ProducesResponseType<ProductDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -56,6 +84,7 @@ public sealed class ProductsController(ISender sender) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthorizationPolicies.InventoryWrite)]
     [ProducesResponseType<ProductDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ProductDto>> Create(
@@ -77,6 +106,7 @@ public sealed class ProductsController(ISender sender) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Policy = AuthorizationPolicies.InventoryWrite)]
     [ProducesResponseType<ProductDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -101,6 +131,7 @@ public sealed class ProductsController(ISender sender) : ControllerBase
     }
 
     [HttpPost("{id:int}/ajustes-stock")]
+    [Authorize(Policy = AuthorizationPolicies.InventoryWrite)]
     [ProducesResponseType<ProductDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -118,6 +149,7 @@ public sealed class ProductsController(ISender sender) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = AuthorizationPolicies.InventoryWrite)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)

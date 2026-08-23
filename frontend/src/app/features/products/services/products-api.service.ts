@@ -1,8 +1,14 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../../../core/config/api.config';
-import { Product, ProductUpsertPayload } from '../models/product.model';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import {
+  InventorySummary,
+  Product,
+  ProductQuery,
+  ProductUpsertPayload,
+} from '../models/product.model';
 import { StockAdjustmentPayload } from '../models/stock-adjustment.model';
 
 @Injectable()
@@ -10,8 +16,26 @@ export class ProductsApiService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${inject(API_BASE_URL).replace(/\/$/, '')}/productos`;
 
-  list(): Observable<readonly Product[]> {
-    return this.http.get<readonly Product[]>(this.apiUrl);
+  list(query: ProductQuery): Observable<PagedResult<Product>> {
+    let params = new HttpParams()
+      .set('stock', query.stock)
+      .set('pagina', query.pageNumber)
+      .set('tamanoPagina', query.pageSize)
+      .set('ordenarPor', query.sortBy)
+      .set('direccion', query.sortDirection);
+
+    if (query.categoryId !== null) {
+      params = params.set('categoriaId', query.categoryId);
+    }
+    if (query.search.trim().length > 0) {
+      params = params.set('buscar', query.search.trim());
+    }
+
+    return this.http.get<PagedResult<Product>>(this.apiUrl, { params });
+  }
+
+  getSummary(): Observable<InventorySummary> {
+    return this.http.get<InventorySummary>(`${this.apiUrl}/resumen`);
   }
 
   getById(id: number): Observable<Product> {

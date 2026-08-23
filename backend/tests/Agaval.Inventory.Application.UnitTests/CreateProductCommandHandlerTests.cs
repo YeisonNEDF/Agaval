@@ -75,8 +75,28 @@ public sealed class CreateProductCommandHandlerTests
         public Task<Category?> GetActiveByIdAsync(int id, CancellationToken cancellationToken) =>
             Task.FromResult(category?.Id == id ? category : null);
 
+        public Task<Category?> GetByIdAsync(
+            int id,
+            bool trackChanges,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(category?.Id == id ? category : null);
+
         public Task<IReadOnlyList<Category>> ListActiveAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<Category>>(category is null ? [] : [category]);
+
+        public Task<IReadOnlyList<Category>> ListAsync(
+            bool includeInactive,
+            CancellationToken cancellationToken) =>
+            ListActiveAsync(cancellationToken);
+
+        public Task<bool> NameExistsAsync(
+            string name,
+            int? excludedId,
+            CancellationToken cancellationToken) => Task.FromResult(false);
+
+        public void Add(Category categoryToAdd)
+        {
+        }
     }
 
     private sealed class ProductRepositoryStub : IProductRepository
@@ -88,9 +108,13 @@ public sealed class CreateProductCommandHandlerTests
             bool trackChanges,
             CancellationToken cancellationToken) => Task.FromResult<Product?>(null);
 
-        public Task<IReadOnlyList<Product>> ListAsync(
+        public Task<PagedResult<Product>> ListAsync(
             ProductFilter filter,
-            CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<Product>>([]);
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new PagedResult<Product>([], 1, 10, 0));
+
+        public Task<InventorySummary> GetSummaryAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(new InventorySummary(0, 0, 0));
 
         public void Add(Product product) => AddedProduct = product;
 

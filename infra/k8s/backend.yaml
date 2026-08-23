@@ -30,6 +30,21 @@ spec:
                 secretKeyRef:
                   name: agaval-secrets
                   key: database-connection
+            - name: Authentication__SigningKey
+              valueFrom:
+                secretKeyRef:
+                  name: agaval-secrets
+                  key: jwt-signing-key
+            - name: Authentication__Username
+              valueFrom:
+                secretKeyRef:
+                  name: agaval-secrets
+                  key: auth-username
+            - name: Authentication__Password
+              valueFrom:
+                secretKeyRef:
+                  name: agaval-secrets
+                  key: auth-password
           readinessProbe:
             httpGet:
               path: /health

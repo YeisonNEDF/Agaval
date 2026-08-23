@@ -3,5 +3,11 @@ using MediatR;
 
 namespace Agaval.Inventory.Application.Features.Products.GetList;
 
-public sealed record GetProductsQuery(int? CategoryId, StockFilter Stock)
-    : IRequest<IReadOnlyList<ProductDto>>;
+public sealed record GetProductsQuery(
+    int? CategoryId,
+    StockFilter Stock,
+    string? Search,
+    int PageNumber,
+    int PageSize,
+    ProductSortField SortBy,
+    SortDirection SortDirection) : IRequest<PagedResult<ProductDto>>;

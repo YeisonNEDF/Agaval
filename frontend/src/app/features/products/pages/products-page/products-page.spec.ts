@@ -1,6 +1,7 @@
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
+import { AuthenticationStore } from '../../../../core/authentication/authentication.store';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { ProductsStore } from '../../services/products.store';
@@ -18,18 +19,26 @@ describe('ProductsPageComponent', () => {
     const storeStub = {
       products: signal([]),
       categories: signal([]),
-      filters: signal({ categoryId: null, stock: 'all' }),
+      query: signal({
+        categoryId: null,
+        stock: 'all',
+        search: '',
+        pageNumber: 1,
+        pageSize: 10,
+        sortBy: 'Name',
+        sortDirection: 'Ascending',
+      }),
+      filters: signal({ categoryId: null, stock: 'all', search: '' }),
       loading: signal(false),
       saving: signal(false),
       error: signal(null),
-      filteredProducts: signal([]),
+      totalCount: signal(0),
       totalProducts: signal(0),
       lowStockCount: signal(0),
       inventoryValue: signal(0),
       hasActiveFilters: signal(false),
       load: loadSpy,
-      setFilters: jasmine.createSpy('setFilters'),
-      clearFilters: jasmine.createSpy('clearFilters'),
+      setQuery: jasmine.createSpy('setQuery'),
       create: jasmine.createSpy('create').and.resolveTo(true),
       update: jasmine.createSpy('update').and.resolveTo(true),
       adjustStock: jasmine.createSpy('adjustStock').and.resolveTo(true),
@@ -42,6 +51,14 @@ describe('ProductsPageComponent', () => {
         provideZonelessChangeDetection(),
         provideRouter([]),
         { provide: ProductsStore, useValue: storeStub },
+        {
+          provide: AuthenticationStore,
+          useValue: {
+            isAuthenticated: signal(true),
+            username: signal('test-manager'),
+            logout: jasmine.createSpy('logout'),
+          },
+        },
         { provide: MatDialog, useValue: { open: dialogOpenSpy } },
       ],
     }).compileComponents();
@@ -63,7 +80,7 @@ describe('ProductsPageComponent', () => {
   it('uses a dedicated route for the low-stock view', () => {
     const navigateSpy = spyOn(router, 'navigate').and.resolveTo(true);
 
-    fixture.componentInstance.setFilters({ categoryId: null, stock: 'low' });
+    fixture.componentInstance.setFilters({ categoryId: null, stock: 'low', search: '' });
 
     expect(navigateSpy).toHaveBeenCalledOnceWith(['/productos/stock-bajo'], {
       queryParams: {},
@@ -73,7 +90,7 @@ describe('ProductsPageComponent', () => {
   it('keeps category and normal-stock filters shareable in the URL', () => {
     const navigateSpy = spyOn(router, 'navigate').and.resolveTo(true);
 
-    fixture.componentInstance.setFilters({ categoryId: 2, stock: 'normal' });
+    fixture.componentInstance.setFilters({ categoryId: 2, stock: 'normal', search: '' });
 
     expect(navigateSpy).toHaveBeenCalledOnceWith(['/productos'], {
       queryParams: { categoriaId: 2, stock: 'normal' },

@@ -2,7 +2,8 @@ using Agaval.Inventory.Domain.Entities;
 
 namespace Agaval.Inventory.Application.Features.Categories;
 
-public sealed record CategoryDto(int Id, string Name)
+public sealed record CategoryDto(int Id, string Name, bool IsActive)
 {
-    internal static CategoryDto FromEntity(Category category) => new(category.Id, category.Name);
+    internal static CategoryDto FromEntity(Category category) =>
+        new(category.Id, category.Name, category.IsActive);
 }

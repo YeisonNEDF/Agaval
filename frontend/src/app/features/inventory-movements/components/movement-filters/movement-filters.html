@@ -1,0 +1,29 @@
+<section class="movement-filters" aria-label="Filtros del historial">
+  <div class="movement-filters__title">
+    <mat-icon aria-hidden="true">filter_alt</mat-icon>
+    <div><h2>Filtrar historial</h2><p>Consulte por producto o tipo de movimiento.</p></div>
+  </div>
+  <div class="movement-filters__controls">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Producto</mat-label>
+      <mat-select [value]="query().productId" (selectionChange)="changeProduct($event.value)">
+        <mat-option [value]="null">Todos los productos</mat-option>
+        @for (product of products(); track product.id) {
+          <mat-option [value]="product.id">{{ product.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Tipo</mat-label>
+      <mat-select [value]="query().type" (selectionChange)="changeType($event.value)">
+        <mat-option [value]="null">Entradas y salidas</mat-option>
+        <mat-option value="Entry">Entradas</mat-option>
+        <mat-option value="Exit">Salidas</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-button type="button" (click)="clear()">
+      <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
+      Limpiar
+    </button>
+  </div>
+</section>

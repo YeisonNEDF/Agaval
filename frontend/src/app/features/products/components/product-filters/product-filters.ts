@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Category } from '../../models/category.model';
 import { ProductFilters, StockFilter } from '../../models/product.model';
@@ -9,7 +10,7 @@ import { ProductFilters, StockFilter } from '../../models/product.model';
 @Component({
   selector: 'app-product-filters',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule],
   templateUrl: './product-filters.html',
   styleUrl: './product-filters.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,5 +27,9 @@ export class ProductFiltersComponent {
 
   changeStock(stock: StockFilter): void {
     this.filtersChanged.emit({ ...this.filters(), stock });
+  }
+
+  changeSearch(search: string): void {
+    this.filtersChanged.emit({ ...this.filters(), search: search.trim() });
   }
 }

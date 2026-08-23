@@ -105,7 +105,7 @@ Referencias oficiales:
 
 ## Variables de `.env`
 
-`.env.example` contiene valores de desarrollo funcionales. Al primer inicio se copia como `.env`, archivo ignorado por Git.
+`.env.example` contiene valores de desarrollo funcionales y el repositorio incluye también `.env` para una evaluación inmediata. Esta es una decisión explícita del ejercicio; esos valores nunca deben reutilizarse como secretos productivos.
 
 | Variable | Valor inicial | Responsabilidad |
 | --- | --- | --- |
@@ -123,8 +123,15 @@ Referencias oficiales:
 | `APPLY_MIGRATIONS_ON_STARTUP` | `true` | Aplica migración y seed durante el arranque local. |
 | `PUBLIC_HOST` | `localhost` | Host mostrado en las URLs finales. |
 | `NATIVE_DATABASE_CONNECTION` | vacío | Conexión SQL para ejecución nativa; en Windows puede suplirla LocalDB. |
+| `AUTH_ISSUER` | `Agaval.Inventory.Api` | Emisor JWT aceptado. |
+| `AUTH_AUDIENCE` | `Agaval.Inventory.Frontend` | Audiencia JWT aceptada. |
+| `AUTH_JWT_SIGNING_KEY` | clave local de ejemplo | Firma HMAC; requiere al menos 32 caracteres. |
+| `AUTH_USERNAME` | `admin` | Usuario local configurable. |
+| `AUTH_PASSWORD` | clave local de evaluación | Contraseña para habilitar escrituras. |
+| `AUTH_ROLE` | `InventoryManager` | Rol requerido por la política de escritura. |
+| `AUTH_TOKEN_LIFETIME_MINUTES` | `120` | Vigencia de la sesión. |
 
-El password publicado es deliberadamente una credencial local de ejemplo, no un secreto productivo. Antes de desplegar se debe suministrar mediante el gestor de secretos de la plataforma y rotarlo.
+Los passwords y la firma publicados son deliberadamente credenciales locales de ejemplo, no secretos productivos. Antes de desplegar se deben reemplazar, rotar y suministrar mediante el gestor de secretos de la plataforma.
 
 ## Ejecución nativa
 

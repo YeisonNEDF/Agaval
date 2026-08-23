@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using Agaval.Inventory.Api.Contracts.Products;
+using Agaval.Inventory.Application.Common.Models;
+using Agaval.Inventory.Application.Features.InventoryMovements;
 using Agaval.Inventory.Application.Features.Products;
 
 namespace Agaval.Inventory.Api.FunctionalTests;
@@ -12,6 +14,13 @@ public sealed class ProductsEndpointsTests
     {
         await using var factory = new InventoryApiFactory();
         using var client = factory.CreateClient();
+
+        var unauthorizedResponse = await client.PostAsJsonAsync(
+            "/api/productos",
+            new CreateProductRequest(string.Empty, null, 0, -1, -1, 0));
+        Assert.Equal(HttpStatusCode.Unauthorized, unauthorizedResponse.StatusCode);
+
+        await client.AuthenticateManagerAsync();
 
         var invalidResponse = await client.PostAsJsonAsync(
             "/api/productos",
@@ -69,6 +78,22 @@ public sealed class ProductsEndpointsTests
         Assert.NotNull(adjusted);
         Assert.Equal(7, adjusted.Stock);
         Assert.False(adjusted.IsLowStock);
+
+        var movements = await client.GetFromJsonAsync<PagedResult<InventoryMovementDto>>(
+            $"/api/movimientos-inventario?productoId={created.Id}&pagina=1&tamanoPagina=5");
+        Assert.NotNull(movements);
+        Assert.Single(movements.Items);
+        Assert.Equal("Compra de reposición", movements.Items[0].Observation);
+
+        var productsPage = await client.GetFromJsonAsync<PagedResult<ProductDto>>(
+            "/api/productos?buscar=Pro&stock=normal&pagina=1&tamanoPagina=5&ordenarPor=Price&direccion=Descending");
+        Assert.NotNull(productsPage);
+        Assert.Single(productsPage.Items);
+        Assert.Equal(created.Id, productsPage.Items[0].Id);
+
+        var summary = await client.GetFromJsonAsync<InventorySummary>("/api/productos/resumen");
+        Assert.NotNull(summary);
+        Assert.Equal(1, summary.TotalProducts);
 
         var deleteResponse = await client.DeleteAsync($"/api/productos/{created.Id}");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);

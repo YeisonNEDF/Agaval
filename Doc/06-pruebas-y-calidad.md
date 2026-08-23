@@ -30,6 +30,9 @@ Cobertura de comportamiento:
 - invariantes del producto y stock bajo;
 - entradas y salidas válidas;
 - rechazo de una salida que dejaría stock negativo;
+- creación, edición y desactivación de categorías;
+- credenciales inválidas, emisión JWT y autorización por rol;
+- búsqueda, paginación, ordenamiento, resumen e historial por HTTP;
 - validación de Commands;
 - orquestación de Create con repositorios dobles;
 - ciclo HTTP funcional completo a través de controllers, MediatR y FluentValidation;
@@ -46,7 +49,7 @@ npm run build
 npm audit
 ```
 
-Los 20 specs prueban componentes, shell, navegación visible, configuración de diálogos dentro del viewport, filtros sincronizados con URL y rutas HTTP de servicios. Se revisa además la ausencia de los anti-patrones expresos del estándar mediante búsqueda estática.
+Los 26 specs prueban componentes, shell, navegación visible, configuración de diálogos dentro del viewport, filtros/página/orden sincronizados con URL, interceptor JWT, rutas opcionales y contratos HTTP de productos, categorías y movimientos. Se revisa además la ausencia de los anti-patrones expresos del estándar mediante búsqueda estática.
 
 ## Validación funcional en navegador
 
@@ -72,8 +75,8 @@ Además se repitió por HTTP, atravesando el reverse proxy del frontend, el cicl
 
 La pasada final debe mantener:
 
-- Backend: 12 tests aprobados, 0 fallidos.
-- Frontend: 20 tests aprobados, 0 fallidos.
+- Backend: 17 tests aprobados, 0 fallidos.
+- Frontend: 26 tests aprobados, 0 fallidos.
 - Build .NET Release: 0 warnings y 0 errores.
 - Lint Angular: sin hallazgos.
 - Build Angular production: exitoso.
@@ -81,7 +84,7 @@ La pasada final debe mantener:
 - Modelo EF Core: sin cambios pendientes frente a la migración SQL Server.
 - Smoke test de API: `/health` y OpenAPI respondieron HTTP 200 con migraciones desactivadas.
 
-Los seis archivos YAML de CI, Compose y Kubernetes fueron parseados correctamente. En la estación de validación se instaló Docker 29.7.2 con Compose 5.4.0 y se realizó una prueba integral del artefacto:
+Los archivos YAML de CI, despliegue, Compose y Kubernetes fueron parseados correctamente. Los dos módulos Bicep de Azure se validaron con la CLI oficial. En la estación de validación se instaló Docker 29.7.2 con Compose 5.4.0 y se realizó una prueba integral del artefacto base:
 
 - construcción multi-stage de las imágenes de backend y frontend;
 - SQL Server en estado `healthy`;
@@ -100,7 +103,9 @@ La instalación asistida añadió verificaciones no destructivas `--check`/`-Che
 
 El arranque, las solicitudes HTTP y el cierre se mantienen dentro del mismo step de Windows. Esto evita que la limpieza de procesos huérfanos del runner elimine los servidores iniciados en background antes de realizar las comprobaciones; un `trap` garantiza el cierre aun cuando una solicitud falle.
 
-Después de reproducir un fallo de detección en Windows con Node 25, se eliminó la evaluación JavaScript usada para obtener la versión y se reemplazó por `node --version`. El diagnóstico se verificó con Node 22.19.0 y se declaró en `package.json` el rango oficial de Angular 20.3. La pasada posterior mantuvo lint limpio, 20 pruebas frontend aprobadas y build de producción exitoso.
+Después de reproducir un fallo de detección en Windows con Node 25, se eliminó la evaluación JavaScript usada para obtener la versión y se reemplazó por `node --version`. El diagnóstico se verificó con Node 22.19.0 y se declaró en `package.json` el rango oficial de Angular 20.3. La pasada actual mantiene lint limpio, 26 pruebas frontend aprobadas y build de producción exitoso.
+
+La sección opcional se verificó además con tests funcionales en memoria que atraviesan ASP.NET Core, autenticación JWT, Controllers, MediatR, FluentValidation y Handlers. El recorrido cubre 401 sin token, login válido/inválido, CRUD de categorías con 409 por duplicado, consulta paginada/ordenada de productos, resumen y consulta del movimiento creado por un ajuste.
 
 Una segunda reproducción en Git Bash con Node 24.19 mostró que el primer diagnóstico era correcto, pero la validación redundante previa al arranque podía perder la resolución de `npm.cmd`. El inicio nativo ahora conserva el diagnóstico ya validado y, como respaldo, busca `npm.cmd` en el mismo directorio de `node.exe`. Git Bash establece además la página de códigos UTF-8 antes de delegar en Windows PowerShell.
 

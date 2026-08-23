@@ -1,10 +1,13 @@
 import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AuthenticationStore } from '../../../../core/authentication/authentication.store';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Sort } from '@angular/material/sort';
 import { ActivatedRoute, ParamMap, Params, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -23,7 +26,14 @@ import {
   StockAdjustmentDialogComponent,
   StockAdjustmentDialogData,
 } from '../../components/stock-adjustment-dialog/stock-adjustment-dialog';
-import { Product, ProductFilters, StockFilter } from '../../models/product.model';
+import {
+  Product,
+  ProductFilters,
+  ProductQuery,
+  ProductSortField,
+  SortDirection,
+  StockFilter,
+} from '../../models/product.model';
 import { ProductsStore } from '../../services/products.store';
 
 const PRODUCT_FORM_DIALOG_LAYOUT = {
@@ -53,6 +63,7 @@ const PRODUCT_FORM_DIALOG_LAYOUT = {
 })
 export class ProductsPageComponent {
   readonly store = inject(ProductsStore);
+  readonly authentication = inject(AuthenticationStore);
   private readonly dialog = inject(MatDialog);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -61,29 +72,46 @@ export class ProductsPageComponent {
 
   constructor() {
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
-      this.store.setFilters(this.readFiltersFromRoute(params));
+      this.store.setQuery(this.readQueryFromRoute(params));
+      void this.store.load();
     });
-
-    void this.store.load();
   }
 
   setFilters(filters: ProductFilters): void {
-    const commands = filters.stock === 'low' ? ['/productos/stock-bajo'] : ['/productos'];
-    const queryParams: Params = {};
-
-    if (filters.categoryId !== null) {
-      queryParams['categoriaId'] = filters.categoryId;
-    }
-
-    if (filters.stock === 'normal') {
-      queryParams['stock'] = filters.stock;
-    }
-
-    void this.router.navigate(commands, { queryParams });
+    this.navigateToQuery({ ...this.store.query(), ...filters, pageNumber: 1 });
   }
 
   clearFilters(): void {
-    void this.router.navigate(['/productos']);
+    const query = this.store.query();
+    this.navigateToQuery({
+      ...query,
+      categoryId: null,
+      stock: 'all',
+      search: '',
+      pageNumber: 1,
+    });
+  }
+
+  setPage(event: PageEvent): void {
+    this.navigateToQuery({
+      ...this.store.query(),
+      pageNumber: event.pageIndex + 1,
+      pageSize: event.pageSize,
+    });
+  }
+
+  setSort(sort: Sort): void {
+    if (!isProductSortField(sort.active)) {
+      return;
+    }
+
+    const sortDirection: SortDirection = sort.direction === 'desc' ? 'Descending' : 'Ascending';
+    this.navigateToQuery({
+      ...this.store.query(),
+      sortBy: sort.active,
+      sortDirection,
+      pageNumber: 1,
+    });
   }
 
   async openCreateDialog(): Promise<void> {
@@ -160,14 +188,51 @@ export class ProductsPageComponent {
     }
   }
 
-  private readFiltersFromRoute(params: ParamMap): ProductFilters {
+  private navigateToQuery(query: ProductQuery): void {
+    const commands = query.stock === 'low' ? ['/productos/stock-bajo'] : ['/productos'];
+    const queryParams: Params = {};
+
+    if (query.categoryId !== null) {
+      queryParams['categoriaId'] = query.categoryId;
+    }
+    if (query.stock === 'normal') {
+      queryParams['stock'] = query.stock;
+    }
+    if (query.search.length > 0) {
+      queryParams['buscar'] = query.search;
+    }
+    if (query.pageNumber > 1) {
+      queryParams['pagina'] = query.pageNumber;
+    }
+    if (query.pageSize !== 10) {
+      queryParams['tamano'] = query.pageSize;
+    }
+    if (query.sortBy !== 'Name') {
+      queryParams['ordenarPor'] = query.sortBy;
+    }
+    if (query.sortDirection !== 'Ascending') {
+      queryParams['direccion'] = query.sortDirection;
+    }
+
+    void this.router.navigate(commands, { queryParams });
+  }
+
+  private readQueryFromRoute(params: ParamMap): ProductQuery {
     const categoryId = parsePositiveInteger(params.get('categoriaId'));
     const routeStock: StockFilter =
       this.route.snapshot.routeConfig?.path === 'stock-bajo'
         ? 'low'
         : parseStockFilter(params.get('stock'));
 
-    return { categoryId, stock: routeStock };
+    return {
+      categoryId,
+      stock: routeStock,
+      search: (params.get('buscar') ?? '').slice(0, 150),
+      pageNumber: parsePositiveInteger(params.get('pagina')) ?? 1,
+      pageSize: parsePageSize(params.get('tamano')),
+      sortBy: parseProductSortField(params.get('ordenarPor')),
+      sortDirection: parseSortDirection(params.get('direccion')),
+    };
   }
 }
 
@@ -182,4 +247,21 @@ function parsePositiveInteger(value: string | null): number | null {
 
 function parseStockFilter(value: string | null): StockFilter {
   return value === 'low' || value === 'normal' ? value : 'all';
+}
+
+function parsePageSize(value: string | null): number {
+  const parsedValue = Number(value);
+  return [5, 10, 25, 50, 100].includes(parsedValue) ? parsedValue : 10;
+}
+
+function isProductSortField(value: string): value is ProductSortField {
+  return ['Name', 'Category', 'Price', 'Stock', 'CreatedAt'].includes(value);
+}
+
+function parseProductSortField(value: string | null): ProductSortField {
+  return value !== null && isProductSortField(value) ? value : 'Name';
+}
+
+function parseSortDirection(value: string | null): SortDirection {
+  return value === 'Descending' ? value : 'Ascending';
 }

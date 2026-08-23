@@ -2,14 +2,23 @@
   <div class="product-list__heading">
     <div>
       <h2 id="product-list-title">Productos registrados</h2>
-      <p>{{ products().length }} resultados en la vista actual</p>
+      <p>{{ products().length }} en esta página · {{ totalCount() }} resultados</p>
     </div>
   </div>
 
   <div class="product-list__scroll">
-    <table mat-table [dataSource]="products()" class="product-list__table">
+    <table
+      mat-table
+      matSort
+      [dataSource]="products()"
+      [matSortActive]="sortBy()"
+      [matSortDirection]="sortDirection() === 'Ascending' ? 'asc' : 'desc'"
+      matSortDisableClear
+      class="product-list__table"
+      (matSortChange)="sortChanged.emit($event)"
+    >
       <ng-container matColumnDef="product">
-        <th mat-header-cell *matHeaderCellDef>Producto</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="Name">Producto</th>
         <td mat-cell *matCellDef="let product" class="product-list__cell--product">
           <div class="product-list__product">
             <span class="product-list__avatar" aria-hidden="true">
@@ -24,14 +33,14 @@
       </ng-container>
 
       <ng-container matColumnDef="category">
-        <th mat-header-cell *matHeaderCellDef>Categoría</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="Category">Categoría</th>
         <td mat-cell *matCellDef="let product" class="product-list__cell" data-label="Categoría">
           <span class="product-list__category">{{ product.categoryName }}</span>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="price">
-        <th mat-header-cell *matHeaderCellDef>Precio</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="Price">Precio</th>
         <td mat-cell *matCellDef="let product" class="product-list__cell" data-label="Precio">
           <span class="product-list__price">
             {{ product.price | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
@@ -40,7 +49,7 @@
       </ng-container>
 
       <ng-container matColumnDef="stock">
-        <th mat-header-cell *matHeaderCellDef>Existencias</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="Stock">Existencias</th>
         <td mat-cell *matCellDef="let product" class="product-list__cell" data-label="Existencias">
           <div class="product-list__stock">
             <strong>{{ product.stock }}</strong>
@@ -72,34 +81,38 @@
         </th>
         <td mat-cell *matCellDef="let product" class="product-list__cell--actions">
           <div class="product-list__actions">
-            <button
-              mat-icon-button
-              type="button"
-              matTooltip="Ajustar stock"
-              aria-label="Ajustar stock de {{ product.name }}"
-              (click)="stockAdjustmentRequested.emit(product)"
-            >
-              <mat-icon>swap_vert</mat-icon>
-            </button>
-            <button
-              mat-icon-button
-              type="button"
-              matTooltip="Editar producto"
-              aria-label="Editar {{ product.name }}"
-              (click)="editRequested.emit(product)"
-            >
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button
-              mat-icon-button
-              type="button"
-              class="product-list__delete"
-              matTooltip="Eliminar producto"
-              aria-label="Eliminar {{ product.name }}"
-              (click)="deleteRequested.emit(product)"
-            >
-              <mat-icon>delete_outline</mat-icon>
-            </button>
+            @if (canManage()) {
+              <button
+                mat-icon-button
+                type="button"
+                matTooltip="Ajustar stock"
+                aria-label="Ajustar stock de {{ product.name }}"
+                (click)="stockAdjustmentRequested.emit(product)"
+              >
+                <mat-icon>swap_vert</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                type="button"
+                matTooltip="Editar producto"
+                aria-label="Editar {{ product.name }}"
+                (click)="editRequested.emit(product)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                type="button"
+                class="product-list__delete"
+                matTooltip="Eliminar producto"
+                aria-label="Eliminar {{ product.name }}"
+                (click)="deleteRequested.emit(product)"
+              >
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            } @else {
+              <span class="product-list__read-only">Solo lectura</span>
+            }
           </div>
         </td>
       </ng-container>
@@ -108,4 +121,13 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
     </table>
   </div>
+  <mat-paginator
+    [length]="totalCount()"
+    [pageIndex]="pageNumber() - 1"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="[5, 10, 25, 50, 100]"
+    showFirstLastButtons
+    aria-label="Paginar productos"
+    (page)="pageChanged.emit($event)"
+  />
 </section>

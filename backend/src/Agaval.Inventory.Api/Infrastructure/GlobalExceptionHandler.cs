@@ -60,6 +60,18 @@ internal sealed partial class GlobalExceptionHandler(
             Title = "Recurso no encontrado.",
             Detail = notFoundException.Message,
         },
+        ConflictException conflictException => new ProblemDetails
+        {
+            Status = StatusCodes.Status409Conflict,
+            Title = "La operación entra en conflicto con el estado actual.",
+            Detail = conflictException.Message,
+        },
+        AuthenticationFailedException authenticationException => new ProblemDetails
+        {
+            Status = StatusCodes.Status401Unauthorized,
+            Title = "No fue posible iniciar sesión.",
+            Detail = authenticationException.Message,
+        },
         DbUpdateConcurrencyException => new ProblemDetails
         {
             Status = StatusCodes.Status409Conflict,

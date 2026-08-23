@@ -33,6 +33,13 @@ services:
       ConnectionStrings__Database: Server=sqlserver,1433;Database=${DATABASE_NAME:-GestorInventarioDB};User Id=sa;Password=${MSSQL_SA_PASSWORD:-Agaval_local_2026!};Encrypt=True;TrustServerCertificate=True
       Database__ApplyMigrationsOnStartup: ${APPLY_MIGRATIONS_ON_STARTUP:-true}
       Cors__AllowedOrigins__0: http://${PUBLIC_HOST:-localhost}:${FRONTEND_PORT:-4200}
+      Authentication__Issuer: ${AUTH_ISSUER:-Agaval.Inventory.Api}
+      Authentication__Audience: ${AUTH_AUDIENCE:-Agaval.Inventory.Frontend}
+      Authentication__SigningKey: ${AUTH_JWT_SIGNING_KEY:-Agaval-development-signing-key-2026-change-me}
+      Authentication__Username: ${AUTH_USERNAME:-admin}
+      Authentication__Password: ${AUTH_PASSWORD:-Agaval_admin_2026!}
+      Authentication__Role: ${AUTH_ROLE:-InventoryManager}
+      Authentication__TokenLifetimeMinutes: ${AUTH_TOKEN_LIFETIME_MINUTES:-120}
     ports:
       - "${BACKEND_PORT:-5100}:8080"
     restart: unless-stopped
@@ -42,6 +49,8 @@ services:
       context: ./frontend
     depends_on:
       - agaval-backend
+    environment:
+      BACKEND_UPSTREAM: http://agaval-backend:8080
     ports:
       - "${FRONTEND_PORT:-4200}:8080"
     restart: unless-stopped

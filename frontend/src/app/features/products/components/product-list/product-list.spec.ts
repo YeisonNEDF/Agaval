@@ -25,6 +25,12 @@ describe('ProductListComponent', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(ProductListComponent);
     fixture.componentRef.setInput('products', [product]);
+    fixture.componentRef.setInput('totalCount', 1);
+    fixture.componentRef.setInput('pageNumber', 1);
+    fixture.componentRef.setInput('pageSize', 10);
+    fixture.componentRef.setInput('sortBy', 'Name');
+    fixture.componentRef.setInput('sortDirection', 'Ascending');
+    fixture.componentRef.setInput('canManage', true);
     await fixture.whenStable();
   });
 

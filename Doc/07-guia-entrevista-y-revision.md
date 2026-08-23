@@ -36,7 +36,7 @@ Este orden permite explicar primero las decisiones y después los detalles:
 | Requisito | Implementación | Evidencia principal |
 | --- | --- | --- |
 | CRUD de productos | Crear, listar, consultar, editar y eliminar | `ProductsController`, vertical slices de `Products` |
-| Categorías | Consulta de categorías activas y seed | `CategoriesController`, `CategoryConfiguration` |
+| Categorías | CRUD con baja lógica y seed | `CategoriesController`, slices de `Categories`, feature Angular |
 | Stock bajo | Regla `Stock < MinimumStock`, filtro y endpoint dedicado | `Product.IsLowStock`, `GetLowStock` |
 | Entrada/salida | Ajuste validado y movimiento persistido | `Product.AdjustStock`, `AdjustStock` Handler |
 | Validación | Formularios + FluentValidation + dominio + constraints SQL | validators, entidad y configurations EF |
@@ -47,6 +47,7 @@ Este orden permite explicar primero las decisiones y después los detalles:
 | Persistencia reproducible | migración EF y seed idempotente | `Migrations`, `DatabaseInitializationExtensions` |
 | Documentación | análisis, arquitectura, código, DB, respuestas, calidad y operación | carpeta `Doc` |
 | Calidad | format, build, tests, lint, auditorías y CI | `Doc/06-pruebas-y-calidad.md`, workflow CI |
+| Extras | JWT, paginación, historial, categorías y Azure | `Doc/09-funcionalidades-opcionales.md` |
 
 ## Backend: cómo explicar cada capa
 
@@ -128,14 +129,17 @@ El manejador global convierte errores previstos en una forma consistente:
 
 | Método | Ruta | Resultado esperado |
 | --- | --- | --- |
-| `GET` | `/api/categorias` | categorías activas |
-| `GET` | `/api/productos` | listado; admite `categoriaId` y `stock` |
+| `POST` | `/api/autenticacion/login` | JWT con rol y expiración |
+| `GET/POST/PUT/DELETE` | `/api/categorias` | consulta y gestión protegida |
+| `GET` | `/api/productos` | búsqueda, filtros, orden y página |
+| `GET` | `/api/productos/resumen` | métricas globales |
 | `GET` | `/api/productos/{id}` | detalle o 404 |
 | `GET` | `/api/productos/stock-bajo` | productos donde stock es menor al mínimo |
 | `POST` | `/api/productos` | 201 y ubicación del recurso |
 | `PUT` | `/api/productos/{id}` | producto actualizado |
 | `POST` | `/api/productos/{id}/ajustes-stock` | entrada/salida e historial persistente |
 | `DELETE` | `/api/productos/{id}` | 204 o 404 |
+| `GET` | `/api/movimientos-inventario` | historial paginado |
 | `GET` | `/health` | disponibilidad del proceso API |
 
 `backend/src/Agaval.Inventory.Api/Agaval.Inventory.Api.http` contiene peticiones listas para ejecutar sin depender de Swagger.
@@ -148,16 +152,16 @@ La estructura toma la cualidad útil del enfoque habitual en React —componente
 app/
 ├── core/                         infraestructura singleton/global
 │   ├── config/
+│   ├── authentication/
 │   ├── interceptors/
 │   ├── models/
 │   └── services/
 ├── shared/components/            UI reutilizable y agnóstica al negocio
-└── features/products/
-    ├── components/               presentación y diálogos
-    ├── models/                   contratos tipados de la feature
-    ├── pages/                    composición de pantalla
-    ├── services/                 HTTP y estado
-    └── routes.ts                 proveedor y ruta lazy
+└── features/
+    ├── authentication/
+    ├── categories/
+    ├── inventory-movements/
+    └── products/                 cada feature repite models/services/components/pages/routes
 ```
 
 Cada componente conserva juntos sus cuatro artefactos:
@@ -182,7 +186,7 @@ Componente emite intención
     -> OnPush renderiza únicamente lo necesario
 ```
 
-`ProductsStore` mantiene Signals privados y expone vistas readonly. `filteredProducts`, `lowStockCount`, `inventoryValue` y `hasActiveFilters` son `computed`; no se almacenan valores derivados que puedan quedar desincronizados. Las mutaciones están centralizadas y notifican éxito o error.
+`ProductsStore` mantiene Signals privados y expone vistas readonly. Guarda el query y la página devuelta, mientras el resumen global se consulta aparte; así una página parcial nunca produce métricas incorrectas. Las mutaciones están centralizadas, notifican y recargan página/resumen.
 
 Los componentes no conocen URLs. `ProductsApiService` y `CategoriesApiService` encapsulan el contrato HTTP. El navegador usa `/api`; Angular CLI lo dirige a la API en desarrollo y Nginx lo hace en el contenedor.
 
@@ -206,7 +210,7 @@ Las relaciones principales son:
 Categoria 1 ───── * Producto 1 ───── * MovimientoInventario
 ```
 
-Las categorías se precargan y solo las activas se presentan para selección. Un producto referencia una categoría. Cada ajuste de stock crea un movimiento asociado. La eliminación física del producto elimina su historial conforme a la decisión documentada para este CRUD.
+Las categorías se precargan y solo las activas se presentan para selección de productos. El catálogo conserva también las inactivas para administración. Cada ajuste de stock crea un movimiento asociado. La eliminación física del producto elimina su historial conforme a la decisión documentada para este CRUD; desactivar una categoría preserva sus relaciones.
 
 La consistencia se protege en cuatro niveles:
 
@@ -248,15 +252,15 @@ El pipeline repite restore, format, build, test, lint, auditoría de dependencia
 ## Guion de demostración de 5 a 7 minutos
 
 1. Ejecutar el launcher y mostrar que espera API/frontend.
-2. Abrir el dashboard y explicar métricas calculadas con Signals.
-3. Filtrar por categoría y stock bajo.
-4. Crear un producto y provocar primero una validación visible.
-5. Editar el producto.
-6. Registrar una entrada y observar el stock.
+2. Abrir el dashboard y explicar métricas globales, búsqueda y paginación de servidor.
+3. Iniciar sesión con la cuenta de evaluación y mostrar cómo aparecen las acciones protegidas.
+4. Filtrar por categoría/stock y ordenar la tabla.
+5. Crear y editar un producto, provocando primero una validación visible.
+6. Registrar una entrada y consultar el registro en `/movimientos`.
 7. Intentar una salida superior al stock para mostrar la regla del dominio y Problem Details.
-8. Eliminar con diálogo de confirmación.
-9. Mostrar `Product.cs`, un vertical slice y `ProductsStore`.
-10. Cerrar con pruebas y CI.
+8. Crear, editar y desactivar una categoría en `/categorias`.
+9. Eliminar el producto con confirmación y mostrar un vertical slice/Store.
+10. Cerrar con las 43 pruebas y el despliegue Azure preparado.
 
 La API aplica migraciones antes de mapear tráfico, de modo que una base inaccesible impide el arranque inicial. El health check actual confirma el proceso API; no debe presentarse como una comprobación SQL continua.
 
@@ -292,9 +296,9 @@ Porque la ausencia aislada de una tabla con historial de migración intacto indi
 
 El estado es local a una feature y no requiere event sourcing, efectos complejos ni coordinación global. Signals ofrecen una fuente de verdad pequeña, tipada y eficiente. Si crecieran múltiples features con flujos cruzados, se reevaluaría un store más estructurado.
 
-### ¿Por qué filtros locales si existe filtrado en la API?
+### ¿Por qué paginación y filtros en el servidor?
 
-El volumen del ejercicio es pequeño y toda la colección ya está cargada para métricas, por lo que filtrar localmente da respuesta inmediata. La API soporta filtros para conservar un contrato escalable. Con grandes volúmenes se moverían filtrado, orden y paginación completamente al servidor.
+Para que el contrato escale sin descargar el catálogo completo. SQL Server ejecuta búsqueda, filtros, orden, conteo y `Skip/Take`; Angular conserva el query en la URL. Las métricas se obtienen mediante un endpoint de resumen independiente para no calcularlas sobre una sola página.
 
 ### ¿Por qué la migración automática está habilitada?
 
@@ -306,21 +310,22 @@ La operación actual se guarda en una transacción de `SaveChanges`, pero no imp
 
 ### ¿Cómo se protegen secretos?
 
-`.env` está ignorado y tiene permisos restrictivos en el launcher POSIX. `.env.example` solo contiene una clave de desarrollo para el stack local. En producción se inyectan credenciales desde un secret manager; no se versionan. TLS y privilegios mínimos deben configurarse en el ambiente real.
+Por decisión de esta entrega, `.env` y `.env.example` incluyen credenciales exclusivamente locales para facilitar la evaluación. No son credenciales cloud. El workflow de Azure exige secretos del environment de GitHub y los inyecta como secretos de Container Apps; en producción deben rotarse, administrarse con un secret manager y combinarse con TLS y privilegios mínimos.
 
 ### ¿Qué cambiaría para producción?
 
-Autenticación/autorización, paginación, concurrencia optimista, telemetría centralizada, tags de imagen inmutables, secret manager, TLS estricto, migración como job, tests de integración con SQL Server y E2E sobre el artefacto desplegable.
+Reemplazaría la identidad configurable por un proveedor OIDC/Entra ID, agregaría concurrencia optimista, telemetría centralizada, Key Vault, TLS estricto, migración como job, tests SQL efímeros y E2E sobre el artefacto desplegable. Las imágenes Azure ya usan tags inmutables por SHA.
 
 ## Límites implementados, sin ocultarlos
 
 | Tema | Estado actual | Evolución razonable |
 | --- | --- | --- |
-| Autenticación | Fuera del alcance de la prueba | OIDC/JWT y políticas por operación |
-| Paginación | Lista completa adecuada al dataset de demo | paginación/orden/filtros server-side |
+| Autenticación | JWT configurable y política `InventoryWrite` | federación OIDC/Entra ID y usuarios persistidos |
+| Paginación | búsqueda/filtros/orden/página server-side | cursores si el volumen y consistencia lo exigen |
 | Concurrencia de stock | transacción única, sin `rowversion` | control optimista y respuesta 409 |
-| Historial en UI | se persiste pero no hay pantalla dedicada | endpoint paginado y timeline |
-| Categorías | solo lectura, como permite el alcance | feature CRUD separada |
+| Historial en UI | endpoint y pantalla paginada | exportación/auditoría por usuario |
+| Categorías | CRUD separado con baja lógica | control de concurrencia y auditoría |
+| Cloud | Bicep + workflow manual Azure | ejecución requiere suscripción y secrets del propietario |
 | E2E | recorrido manual completo en navegador sobre Docker y SQL Server | automatización Playwright en CI |
 | Integración SQL en CI | imágenes y modelo validados | Testcontainers/servicio SQL efímero |
 | Swagger | solo Development | portal de API autenticado si se requiere |
@@ -330,7 +335,7 @@ Reconocer estos límites demuestra criterio. Una prueba profesional no consiste 
 
 ## Lista final antes de entregar o entrevistar
 
-- `git status` no contiene archivos inesperados ni `.env`.
+- `git status` contiene únicamente cambios intencionales; `.env` se versiona por decisión explícita de la entrega.
 - autor Git es `Yeison Mosquera <yeisonNEDF@gmail.com>`.
 - `./start.sh --status` o `.\start.ps1 -Status` muestra servicios activos.
 - frontend, `/health`, `/api/productos` y `/api/categorias` responden.

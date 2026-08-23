@@ -1,0 +1,36 @@
+<header class="category-form__header">
+  <span class="category-form__icon" aria-hidden="true">
+    <mat-icon>{{ data.category ? 'edit' : 'add' }}</mat-icon>
+  </span>
+  <div>
+    <p>{{ data.category ? 'Actualizar catálogo' : 'Nueva clasificación' }}</p>
+    <h2 mat-dialog-title>{{ data.category ? 'Editar categoría' : 'Crear categoría' }}</h2>
+  </div>
+</header>
+
+<mat-dialog-content>
+  <form id="category-form" class="category-form__body" [formGroup]="form" (ngSubmit)="save()">
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre de la categoría</mat-label>
+      <input matInput formControlName="name" maxlength="100" autocomplete="off" />
+      <mat-hint align="end">{{ form.controls.name.value.length }}/100</mat-hint>
+      @if (form.controls.name.touched && form.controls.name.invalid) {
+        <mat-error>Ingrese un nombre de máximo 100 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (data.category) {
+      <mat-slide-toggle formControlName="isActive">
+        Disponible para asignar a productos
+      </mat-slide-toggle>
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" [mat-dialog-close]="null">Cancelar</button>
+  <button mat-flat-button type="submit" form="category-form">
+    <mat-icon aria-hidden="true">save</mat-icon>
+    {{ data.category ? 'Guardar cambios' : 'Crear categoría' }}
+  </button>
+</mat-dialog-actions>

@@ -60,9 +60,12 @@ Los controladores reciben contratos HTTP y envían mensajes a MediatR. La API co
 
 ```text
 src/app/
-├── core/       configuración, interceptor, errores y notificaciones globales
+├── core/       configuración, autenticación, interceptores y servicios globales
 ├── shared/     componentes reutilizables sin conocimiento de la feature
 └── features/
+    ├── authentication/
+    ├── categories/
+    ├── inventory-movements/
     └── products/
         ├── components/
         ├── models/
@@ -75,7 +78,11 @@ La estructura conserva el principio usado en proyectos React: un componente es u
 
 ## Estado y renderizado
 
-`ProductsStore` es un servicio provisto en la ruta lazy. Sus `signal` privados son la fuente de verdad y sus `computed` exponen métricas derivadas. Los componentes reciben valores mediante inputs, emiten intenciones mediante outputs y usan OnPush. El proyecto se inicia con `provideZonelessChangeDetection()` y no carga `zone.js`.
+Cada feature posee un store provisto en su ruta lazy. Sus `signal` privados son la fuente de verdad y sus `computed` exponen estado derivado. Los componentes reciben valores mediante inputs, emiten intenciones mediante outputs y usan OnPush. El proyecto se inicia con `provideZonelessChangeDetection()` y no carga `zone.js`.
+
+## Seguridad
+
+El login entrega un JWT HMAC-SHA256 con issuer, audience, expiración, nombre y rol. Las consultas permanecen públicas para facilitar revisión; las escrituras requieren la política `InventoryWrite`, asociada a `InventoryManager`. Angular conserva la sesión en `sessionStorage`, expira automáticamente el estado y adjunta el bearer token solo a URLs `/api`. La identidad configurable es adecuada para la prueba; producción debe federar un proveedor OIDC y rotar los secretos.
 
 ## Integración HTTP
 
@@ -91,5 +98,7 @@ Los nombres físicos permanecen `Categorias`, `Productos` y `MovimientosInventar
 - Docker Compose levanta SQL Server, espera su health check y luego inicia la aplicación.
 - Kubernetes incluye Deployment, Service, ConfigMap, Secret de ejemplo, probes y límites de recursos.
 - CI compila y prueba backend y frontend en jobs independientes.
+- Bicep declara Azure Container Apps, Container Registry, Log Analytics y Azure SQL.
+- `deploy-azure.yml` usa OIDC, publica imágenes inmutables por SHA, despliega y verifica `/health` y el proxy `/api`.
 
-Las imágenes y secretos de Kubernetes son plantillas: antes de publicar se deben fijar tags inmutables y crear el Secret real mediante el gestor de secretos de la plataforma.
+Las imágenes y secretos de Kubernetes son plantillas: antes de publicar se deben fijar tags inmutables y crear el Secret real mediante el gestor de secretos de la plataforma. Azure queda listo para un despliegue manual cuando el repositorio tenga configuradas las credenciales y secretos del environment `azure-production`.

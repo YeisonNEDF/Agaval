@@ -12,6 +12,7 @@ import { MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
 import { MatIconRegistry } from '@angular/material/icon';
 import { API_BASE_URL } from './core/config/api.config';
 import { apiErrorInterceptor } from './core/interceptors/api-error.interceptor';
+import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -23,7 +24,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideAnimationsAsync(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([apiErrorInterceptor])),
+    provideHttpClient(withInterceptors([apiErrorInterceptor, authTokenInterceptor])),
     { provide: API_BASE_URL, useValue: '/api' },
     {
       provide: MAT_SNACK_BAR_DEFAULT_OPTIONS,

@@ -10,6 +10,28 @@
   </div>
 
   <div class="product-filters__controls">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="product-filters__search">
+      <mat-label>Buscar producto</mat-label>
+      <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+      <input
+        #searchInput
+        matInput
+        type="search"
+        [value]="filters().search"
+        maxlength="150"
+        (keyup.enter)="changeSearch(searchInput.value)"
+      />
+      <button
+        mat-icon-button
+        matSuffix
+        type="button"
+        aria-label="Aplicar búsqueda"
+        (click)="changeSearch(searchInput.value)"
+      >
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </mat-form-field>
+
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Categoría</mat-label>
       <mat-select

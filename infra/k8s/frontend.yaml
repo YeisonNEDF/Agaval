@@ -21,6 +21,9 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+          env:
+            - name: BACKEND_UPSTREAM
+              value: http://agaval-backend:8080
           readinessProbe:
             httpGet:
               path: /

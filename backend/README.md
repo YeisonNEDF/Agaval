@@ -54,6 +54,18 @@ En Development, la API detecta y aplica automáticamente las migraciones pendien
 - Swagger: `http://localhost:5100/swagger`
 - Health check: `http://localhost:5100/health`
 
+## Autenticación y permisos
+
+Las consultas son públicas. Crear, modificar, desactivar/eliminar o ajustar stock exige un JWT con el rol `InventoryManager`. La cuenta Development incluida es `admin` / `Agaval_admin_2026!`; se obtiene el token mediante `POST /api/autenticacion/login`. Todas las opciones se reemplazan con variables `Authentication__*` o con las variables `AUTH_*` que traducen los launchers y Compose.
+
+## Contrato adicional
+
+- `GET /api/productos`: búsqueda, filtros, orden y paginación server-side.
+- `GET /api/productos/resumen`: métricas globales sin depender de la página actual.
+- `GET /api/movimientos-inventario`: historial paginado por producto y tipo.
+- `GET/POST/PUT/DELETE /api/categorias`: administración completa; DELETE desactiva para conservar referencias históricas.
+- `POST /api/autenticacion/login`: sesión JWT firmada y con expiración.
+
 ## Migraciones
 
 ```bash
@@ -74,4 +86,4 @@ dotnet test Agaval.Inventory.slnx --configuration Release --no-build
 dotnet list Agaval.Inventory.slnx package --vulnerable --include-transitive
 ```
 
-Resultados de la última verificación: 12 pruebas aprobadas, incluidas las del ciclo HTTP funcional, build Release sin warnings ni errores y sin vulnerabilidades NuGet reportadas.
+Resultados de la última verificación: 17 pruebas aprobadas, incluidas autenticación, CRUD de categorías, paginación, historial y el ciclo HTTP de productos; build Release sin warnings ni errores.

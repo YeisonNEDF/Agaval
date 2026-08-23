@@ -1,0 +1,124 @@
+name: Deploy Azure
+
+on:
+  workflow_dispatch:
+    inputs:
+      resource_group:
+        description: Resource group to create or update
+        required: true
+        default: agaval-evaluation-rg
+      location:
+        description: Azure region
+        required: true
+        default: eastus2
+      prefix:
+        description: Alphanumeric resource prefix
+        required: true
+        default: agaval
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: agaval-azure-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Provision, publish and verify
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SQL_ADMIN_LOGIN: agavaladmin
+      SQL_ADMIN_PASSWORD: ${{ secrets.AZURE_SQL_ADMIN_PASSWORD }}
+      AUTH_USERNAME: ${{ vars.AUTH_USERNAME || 'admin' }}
+      AUTH_PASSWORD: ${{ secrets.AUTH_PASSWORD }}
+      AUTH_JWT_SIGNING_KEY: ${{ secrets.AUTH_JWT_SIGNING_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Create resource group
+        run: az group create --name '${{ inputs.resource_group }}' --location '${{ inputs.location }}'
+
+      - name: Provision shared infrastructure
+        id: foundation
+        shell: bash
+        run: |
+          outputs=$(az deployment group create \
+            --resource-group '${{ inputs.resource_group }}' \
+            --template-file infra/azure/foundation.bicep \
+            --parameters prefix='${{ inputs.prefix }}' location='${{ inputs.location }}' \
+              sqlAdministratorLogin="$SQL_ADMIN_LOGIN" \
+              sqlAdministratorPassword="$SQL_ADMIN_PASSWORD" \
+            --query properties.outputs -o json)
+          echo "registry_name=$(jq -r '.registryName.value' <<< "$outputs")" >> "$GITHUB_OUTPUT"
+          echo "registry_server=$(jq -r '.registryLoginServer.value' <<< "$outputs")" >> "$GITHUB_OUTPUT"
+          echo "environment_name=$(jq -r '.containerEnvironmentName.value' <<< "$outputs")" >> "$GITHUB_OUTPUT"
+          echo "identity_name=$(jq -r '.pullIdentityName.value' <<< "$outputs")" >> "$GITHUB_OUTPUT"
+          echo "sql_server_name=$(jq -r '.sqlServerName.value' <<< "$outputs")" >> "$GITHUB_OUTPUT"
+          echo "database_name=$(jq -r '.databaseName.value' <<< "$outputs")" >> "$GITHUB_OUTPUT"
+          echo "resource_base=$(jq -r '.resourceBaseName.value' <<< "$outputs")" >> "$GITHUB_OUTPUT"
+
+      - name: Build and publish immutable images
+        shell: bash
+        env:
+          REGISTRY_NAME: ${{ steps.foundation.outputs.registry_name }}
+          REGISTRY_SERVER: ${{ steps.foundation.outputs.registry_server }}
+        run: |
+          az acr login --name "$REGISTRY_NAME"
+          docker build --tag "$REGISTRY_SERVER/agaval-backend:${GITHUB_SHA}" backend
+          docker build --tag "$REGISTRY_SERVER/agaval-frontend:${GITHUB_SHA}" frontend
+          docker push "$REGISTRY_SERVER/agaval-backend:${GITHUB_SHA}"
+          docker push "$REGISTRY_SERVER/agaval-frontend:${GITHUB_SHA}"
+
+      - name: Deploy Container Apps
+        id: apps
+        shell: bash
+        env:
+          REGISTRY_SERVER: ${{ steps.foundation.outputs.registry_server }}
+        run: |
+          outputs=$(az deployment group create \
+            --resource-group '${{ inputs.resource_group }}' \
+            --template-file infra/azure/apps.bicep \
+            --parameters location='${{ inputs.location }}' \
+              resourceBaseName='${{ steps.foundation.outputs.resource_base }}' \
+              registryName='${{ steps.foundation.outputs.registry_name }}' \
+              containerEnvironmentName='${{ steps.foundation.outputs.environment_name }}' \
+              pullIdentityName='${{ steps.foundation.outputs.identity_name }}' \
+              sqlServerName='${{ steps.foundation.outputs.sql_server_name }}' \
+              databaseName='${{ steps.foundation.outputs.database_name }}' \
+              sqlAdministratorLogin="$SQL_ADMIN_LOGIN" \
+              sqlAdministratorPassword="$SQL_ADMIN_PASSWORD" \
+              authenticationUsername="$AUTH_USERNAME" \
+              authenticationPassword="$AUTH_PASSWORD" \
+              jwtSigningKey="$AUTH_JWT_SIGNING_KEY" \
+              backendImage="$REGISTRY_SERVER/agaval-backend:${GITHUB_SHA}" \
+              frontendImage="$REGISTRY_SERVER/agaval-frontend:${GITHUB_SHA}" \
+            --query properties.outputs -o json)
+          echo "frontend_url=$(jq -r '.frontendUrl.value' <<< "$outputs")" >> "$GITHUB_OUTPUT"
+
+      - name: Verify deployed application
+        env:
+          FRONTEND_URL: ${{ steps.apps.outputs.frontend_url }}
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error "$FRONTEND_URL/health" >/dev/null \
+              && curl --fail --silent --show-error "$FRONTEND_URL/api/productos?pagina=1&tamanoPagina=5" >/dev/null; then
+              echo "AGAVAL deployed at $FRONTEND_URL"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Deployment did not become healthy: $FRONTEND_URL" >&2
+          exit 1
+
+      - name: Publish deployment URL
+        run: echo "### AGAVAL deployment\n${{ steps.apps.outputs.frontend_url }}" >> "$GITHUB_STEP_SUMMARY"

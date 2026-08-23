@@ -1,13 +1,25 @@
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { App } from './app';
+import { AuthenticationStore } from './core/authentication/authentication.store';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideZonelessChangeDetection(), provideRouter([])],
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        {
+          provide: AuthenticationStore,
+          useValue: {
+            isAuthenticated: signal(false),
+            username: signal(null),
+            logout: jasmine.createSpy('logout'),
+          },
+        },
+      ],
     }).compileComponents();
   });
 
@@ -24,7 +36,7 @@ describe('App', () => {
     expect(compiled.querySelector('.app-shell__brand')?.textContent).toContain('AGAVAL');
   });
 
-  it('exposes inventory and low-stock navigation', async () => {
+  it('exposes public inventory navigation', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const links = Array.from(
@@ -37,10 +49,11 @@ describe('App', () => {
       links.map((link) =>
         link.querySelector('.app-shell__nav-label')?.textContent?.trim(),
       ),
-    ).toEqual(['Inventario', 'Stock bajo']);
+    ).toEqual(['Inventario', 'Stock bajo', 'Movimientos']);
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/productos',
       '/productos/stock-bajo',
+      '/movimientos',
     ]);
   });
 });

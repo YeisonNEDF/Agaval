@@ -12,9 +12,9 @@ public sealed class GetLowStockProductsQueryHandler(IProductRepository productRe
         CancellationToken cancellationToken)
     {
         var products = await productRepository
-            .ListAsync(new ProductFilter(Stock: StockFilter.Low), cancellationToken)
+            .ListAsync(new ProductFilter(Stock: StockFilter.Low, PageSize: 100), cancellationToken)
             .ConfigureAwait(false);
 
-        return products.Select(product => ProductDto.FromEntity(product)).ToArray();
+        return products.Items.Select(product => ProductDto.FromEntity(product)).ToArray();
     }
 }

@@ -1,4 +1,6 @@
+using Agaval.Inventory.Application.Abstractions.Authentication;
 using Agaval.Inventory.Application.Abstractions.Persistence;
+using Agaval.Inventory.Infrastructure.Authentication;
 using Agaval.Inventory.Infrastructure.Persistence;
 using Agaval.Inventory.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +15,23 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        var authenticationSection = configuration.GetSection(AuthenticationOptions.SectionName);
+        var tokenLifetimeText = authenticationSection[nameof(AuthenticationOptions.TokenLifetimeMinutes)];
+        var authenticationOptions = new AuthenticationOptions
+        {
+            Issuer = authenticationSection[nameof(AuthenticationOptions.Issuer)] ?? string.Empty,
+            Audience = authenticationSection[nameof(AuthenticationOptions.Audience)] ?? string.Empty,
+            SigningKey = authenticationSection[nameof(AuthenticationOptions.SigningKey)] ?? string.Empty,
+            Username = authenticationSection[nameof(AuthenticationOptions.Username)] ?? string.Empty,
+            Password = authenticationSection[nameof(AuthenticationOptions.Password)] ?? string.Empty,
+            Role = authenticationSection[nameof(AuthenticationOptions.Role)] ?? "InventoryManager",
+            TokenLifetimeMinutes = int.TryParse(tokenLifetimeText, out var tokenLifetimeMinutes)
+                ? tokenLifetimeMinutes
+                : 120,
+        };
+        services.AddSingleton(authenticationOptions);
+        services.AddSingleton<IIdentityService, ConfiguredIdentityService>();
+
         var connectionString = configuration.GetConnectionString("Database");
         if (string.IsNullOrWhiteSpace(connectionString))
         {
@@ -32,6 +51,7 @@ public static class DependencyInjection
 
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IInventoryMovementRepository, InventoryMovementRepository>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<PersistenceContext>());
 
         return services;

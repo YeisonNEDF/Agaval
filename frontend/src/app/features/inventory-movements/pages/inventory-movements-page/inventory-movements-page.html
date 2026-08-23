@@ -1,0 +1,36 @@
+<div class="movements-page">
+  <app-page-header
+    eyebrow="Auditoría de stock"
+    title="Movimientos de inventario"
+    description="Revise cada entrada y salida registrada, con fecha, producto, cantidad y observación."
+  />
+
+  <app-movement-filters
+    [products]="store.products()"
+    [query]="store.query()"
+    (filtersChanged)="setFilters($event)"
+  />
+
+  @if (store.loading()) {
+    <section class="movements-page__loading" aria-live="polite">
+      <mat-spinner diameter="40" />
+      <strong>Consultando movimientos</strong>
+    </section>
+  } @else if (store.error()) {
+    <app-empty-state icon="cloud_off" title="No pudimos cargar el historial" [description]="store.error() ?? ''">
+      <button mat-flat-button type="button" (click)="store.load()">
+        <mat-icon aria-hidden="true">refresh</mat-icon>Reintentar
+      </button>
+    </app-empty-state>
+  } @else if (store.movements().length === 0) {
+    <app-empty-state icon="receipt_long" title="No hay movimientos" description="Los ajustes de stock aparecerán aquí con su trazabilidad completa." />
+  } @else {
+    <app-movement-list
+      [movements]="store.movements()"
+      [totalCount]="store.totalCount()"
+      [pageNumber]="store.query().pageNumber"
+      [pageSize]="store.query().pageSize"
+      (pageChanged)="setPage($event)"
+    />
+  }
+</div>

@@ -385,6 +385,13 @@ start_native() {
     export ConnectionStrings__Database="$NATIVE_CONNECTION"
     export Database__ApplyMigrationsOnStartup="true"
     export Cors__AllowedOrigins__0="http://localhost:${frontend_port}"
+    export Authentication__Issuer="$(read_env "AUTH_ISSUER" "Agaval.Inventory.Api")"
+    export Authentication__Audience="$(read_env "AUTH_AUDIENCE" "Agaval.Inventory.Frontend")"
+    export Authentication__SigningKey="$(read_env "AUTH_JWT_SIGNING_KEY" "Agaval-development-signing-key-2026-change-me")"
+    export Authentication__Username="$(read_env "AUTH_USERNAME" "admin")"
+    export Authentication__Password="$(read_env "AUTH_PASSWORD" "Agaval_admin_2026!")"
+    export Authentication__Role="$(read_env "AUTH_ROLE" "InventoryManager")"
+    export Authentication__TokenLifetimeMinutes="$(read_env "AUTH_TOKEN_LIFETIME_MINUTES" "120")"
     exec "$DOTNET_EXEC" run \
       --project src/Agaval.Inventory.Api/Agaval.Inventory.Api.csproj \
       --no-launch-profile \

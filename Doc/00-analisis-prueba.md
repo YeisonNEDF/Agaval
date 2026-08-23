@@ -62,8 +62,23 @@ El texto blanco detectado corresponde exclusivamente a encabezados visibles de t
 1. **SQL Server:** se usa el proveedor oficial de EF Core y una migración equivalente al script del enunciado. En desarrollo, la API crea y actualiza automáticamente la base configurada.
 2. **Idioma del código:** namespaces, tipos y miembros se escriben en inglés por consistencia técnica; rutas HTTP y nombres físicos de tablas se conservan en español según el enunciado.
 3. **Stock inicial:** crear o editar un producto puede fijar el stock; los cambios operativos posteriores pasan por el endpoint de ajustes y generan trazabilidad.
-4. **Eliminación:** es física, como pide un CRUD sin especificar borrado lógico. La categoría solo se consulta porque su CRUD es opcional.
+4. **Eliminación:** el producto se elimina físicamente, como pide el CRUD. La categoría se desactiva lógicamente para no romper productos e historial relacionados.
 5. **Migraciones en despliegue:** se aplican como paso controlado, no automáticamente en cada réplica.
+
+## Sección opcional / no requerida
+
+Aunque el enunciado permite omitirla, se implementó completa:
+
+| Punto opcional | Estado | Evidencia |
+| --- | --- | --- |
+| CRUD de categorías backend y frontend | Cumplido | vertical slices `Features/Categories`, `CategoriesController` y `features/categories` |
+| Registro/consulta de movimientos | Cumplido | tabla existente, endpoint paginado y feature `/movimientos` |
+| Autenticación/autorización | Cumplido | JWT Bearer, rol `InventoryManager`, login y guard/interceptor Angular |
+| Paginación avanzada | Cumplido | búsqueda, filtros, orden, conteo y páginas ejecutados en SQL Server |
+| Pruebas unitarias/integración | Cumplido | 17 pruebas .NET y 26 specs Angular |
+| Despliegue cloud | Preparado | Azure Container Apps, ACR y Azure SQL con Bicep + workflow OIDC manual |
+
+El despliegue cloud queda automatizado y reproducible, pero no se ejecuta contra una suscripción ajena sin las credenciales Azure del propietario. El detalle técnico y operativo está en `Doc/09-funcionalidades-opcionales.md`.
 
 ## Criterios de aceptación usados
 

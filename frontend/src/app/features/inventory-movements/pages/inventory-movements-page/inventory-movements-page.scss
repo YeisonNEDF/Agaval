@@ -1,0 +1,13 @@
+.movements-page {
+  display: grid;
+  gap: 1.5rem;
+
+  &__loading {
+    display: grid;
+    min-height: 15rem;
+    place-items: center;
+    align-content: center;
+    gap: 0.75rem;
+    color: var(--color-text-muted);
+  }
+}

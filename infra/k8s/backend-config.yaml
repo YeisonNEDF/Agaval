@@ -6,3 +6,7 @@ data:
   ASPNETCORE_ENVIRONMENT: Production
   ASPNETCORE_URLS: http://+:8080
   Database__ApplyMigrationsOnStartup: "false"
+  Authentication__Issuer: Agaval.Inventory.Api
+  Authentication__Audience: Agaval.Inventory.Frontend
+  Authentication__Role: InventoryManager
+  Authentication__TokenLifetimeMinutes: "120"
