@@ -43,14 +43,14 @@ describe('App', () => {
     expect(compiled.querySelector('.app-shell__brand')?.textContent).toContain('AGAVAL');
   });
 
-  it('hides inventory navigation and links the brand to login without a session', async () => {
+  it('renders only the brand in the public header without a session', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
 
     expect(compiled.querySelectorAll('.app-shell__nav-link').length).toBe(0);
     expect(compiled.querySelector('.app-shell__brand')?.getAttribute('href')).toBe('/login');
-    expect(compiled.querySelector('.app-shell__session')?.textContent).toContain('Ingresar');
+    expect(compiled.querySelector('.app-shell__session')).toBeNull();
   });
 
   it('exposes every inventory route only with an authenticated session', async () => {
