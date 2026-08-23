@@ -2,7 +2,7 @@
   <app-page-header
     eyebrow="Catálogo maestro"
     title="Gestión de categorías"
-    description="Administre las clasificaciones disponibles sin perder las relaciones históricas de los productos."
+    description="Cree, edite o elimine clasificaciones; las categorías en uso quedan protegidas."
   >
     <button mat-flat-button type="button" [disabled]="store.saving()" (click)="openForm(null)">
       <mat-icon aria-hidden="true">add</mat-icon>
@@ -39,7 +39,7 @@
       [categories]="store.categories()"
       [saving]="store.saving()"
       (editRequested)="openForm($event)"
-      (deactivateRequested)="confirmDeactivate($event)"
+      (deleteRequested)="confirmDelete($event)"
     />
   }
 </div>

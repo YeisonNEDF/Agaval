@@ -24,4 +24,27 @@ describe('CategoryListComponent', () => {
     expect(content).toContain('Activa');
     expect(content).toContain('Inactiva');
   });
+
+  it('emits the selected category when delete is requested', () => {
+    const emitted: unknown[] = [];
+    fixture.componentInstance.deleteRequested.subscribe((category) => emitted.push(category));
+    const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll('button');
+
+    buttons[1].click();
+
+    expect(emitted).toEqual([{ id: 1, name: 'Electrónica', isActive: true }]);
+  });
+
+  it('provides an accessible name for every icon-only action', () => {
+    const buttons = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('button'),
+    );
+
+    expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual([
+      'Editar Electrónica',
+      'Eliminar Electrónica',
+      'Editar Archivada',
+      'Eliminar Archivada',
+    ]);
+  });
 });

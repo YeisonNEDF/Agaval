@@ -17,6 +17,6 @@ export class CategoryListComponent {
   readonly categories = input.required<readonly ManagedCategory[]>();
   readonly saving = input(false);
   readonly editRequested = output<ManagedCategory>();
-  readonly deactivateRequested = output<ManagedCategory>();
+  readonly deleteRequested = output<ManagedCategory>();
   readonly displayedColumns = ['category', 'status', 'actions'];
 }

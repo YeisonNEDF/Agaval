@@ -14,5 +14,9 @@ public interface ICategoryRepository
 
     Task<bool> NameExistsAsync(string name, int? excludedId, CancellationToken cancellationToken);
 
+    Task<bool> IsInUseAsync(int id, CancellationToken cancellationToken);
+
     void Add(Category category);
+
+    void Remove(Category category);
 }

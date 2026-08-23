@@ -5,14 +5,14 @@ Solución full stack de la prueba técnica: API REST en .NET 10 con Clean Archit
 ## Funcionalidad incluida
 
 - CRUD completo de productos.
-- CRUD de categorías con activación/desactivación lógica y selección de categorías activas.
+- CRUD completo de categorías con eliminación física protegida cuando existen productos asociados.
 - Búsqueda, filtros, ordenamiento y paginación ejecutados en SQL Server.
 - Consulta específica de productos con stock bajo.
 - Entradas y salidas de inventario con historial persistente y pantalla paginada.
 - Autenticación JWT y autorización por rol para todas las operaciones de escritura.
 - Validación de dominio, FluentValidation y formularios tipados.
-- Problem Details, Swagger protegido, health check, 43 pruebas automatizadas y pipeline CI.
-- Migración/seed automático en desarrollo, Docker Compose, Kubernetes y despliegue Azure preparado.
+- Problem Details, Swagger protegido, health check, 54 pruebas automatizadas y pipeline CI con E2E real.
+- Migración/seed automático en desarrollo, Docker Compose, Kubernetes y despliegue Azure completamente automatizado.
 
 ## Estructura
 
@@ -161,6 +161,10 @@ cd frontend
 npm run lint
 npm test -- --watch=false --browsers=ChromeHeadless
 npm run build
+
+# E2E sobre el stack iniciado (API directa y proxy Angular/Nginx)
+cd ..
+node scripts/e2e-smoke.mjs http://localhost:5100 http://localhost:4200
 ```
 
 Las peticiones de ejemplo están en [`backend/src/Agaval.Inventory.Api/Agaval.Inventory.Api.http`](backend/src/Agaval.Inventory.Api/Agaval.Inventory.Api.http).

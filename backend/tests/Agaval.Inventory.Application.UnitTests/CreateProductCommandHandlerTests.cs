@@ -94,7 +94,14 @@ public sealed class CreateProductCommandHandlerTests
             int? excludedId,
             CancellationToken cancellationToken) => Task.FromResult(false);
 
+        public Task<bool> IsInUseAsync(int id, CancellationToken cancellationToken) =>
+            Task.FromResult(false);
+
         public void Add(Category categoryToAdd)
+        {
+        }
+
+        public void Remove(Category categoryToRemove)
         {
         }
     }

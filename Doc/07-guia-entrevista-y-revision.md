@@ -36,7 +36,7 @@ Este orden permite explicar primero las decisiones y después los detalles:
 | Requisito | Implementación | Evidencia principal |
 | --- | --- | --- |
 | CRUD de productos | Crear, listar, consultar, editar y eliminar | `ProductsController`, vertical slices de `Products` |
-| Categorías | CRUD con baja lógica y seed | `CategoriesController`, slices de `Categories`, feature Angular |
+| Categorías | CRUD físico protegido por integridad referencial y seed | `CategoriesController`, slices de `Categories`, feature Angular |
 | Stock bajo | Regla `Stock < MinimumStock`, filtro y endpoint dedicado | `Product.IsLowStock`, `GetLowStock` |
 | Entrada/salida | Ajuste validado y movimiento persistido | `Product.AdjustStock`, `AdjustStock` Handler |
 | Validación | Formularios + FluentValidation + dominio + constraints SQL | validators, entidad y configurations EF |
@@ -210,7 +210,7 @@ Las relaciones principales son:
 Categoria 1 ───── * Producto 1 ───── * MovimientoInventario
 ```
 
-Las categorías se precargan y solo las activas se presentan para selección de productos. El catálogo conserva también las inactivas para administración. Cada ajuste de stock crea un movimiento asociado. La eliminación física del producto elimina su historial conforme a la decisión documentada para este CRUD; desactivar una categoría preserva sus relaciones.
+Las categorías se precargan y solo las activas se presentan para selección de productos. El catálogo conserva también las inactivas para administración. Cada ajuste de stock crea un movimiento asociado. La eliminación física del producto elimina su historial conforme a la decisión documentada para este CRUD; una categoría solo puede eliminarse físicamente cuando no tiene productos asociados.
 
 La consistencia se protege en cuatro niveles:
 
@@ -258,9 +258,9 @@ El pipeline repite restore, format, build, test, lint, auditoría de dependencia
 5. Crear y editar un producto, provocando primero una validación visible.
 6. Registrar una entrada y consultar el registro en `/movimientos`.
 7. Intentar una salida superior al stock para mostrar la regla del dominio y Problem Details.
-8. Crear, editar y desactivar una categoría en `/categorias`.
+8. Crear, editar y eliminar una categoría en `/categorias`; explicar el 409 si está en uso.
 9. Eliminar el producto con confirmación y mostrar un vertical slice/Store.
-10. Cerrar con las 43 pruebas y el despliegue Azure preparado.
+10. Cerrar con las 54 pruebas, el E2E sobre SQL Server y el despliegue Azure automatizado.
 
 La API aplica migraciones antes de mapear tráfico, de modo que una base inaccesible impide el arranque inicial. El health check actual confirma el proceso API; no debe presentarse como una comprobación SQL continua.
 
@@ -324,10 +324,10 @@ Reemplazaría la identidad configurable por un proveedor OIDC/Entra ID, agregar�
 | Paginación | búsqueda/filtros/orden/página server-side | cursores si el volumen y consistencia lo exigen |
 | Concurrencia de stock | transacción única, sin `rowversion` | control optimista y respuesta 409 |
 | Historial en UI | endpoint y pantalla paginada | exportación/auditoría por usuario |
-| Categorías | CRUD separado con baja lógica | control de concurrencia y auditoría |
+| Categorías | CRUD separado con eliminación física protegida | control de concurrencia y auditoría |
 | Cloud | Bicep + workflow manual Azure | ejecución requiere suscripción y secrets del propietario |
-| E2E | recorrido manual completo en navegador sobre Docker y SQL Server | automatización Playwright en CI |
-| Integración SQL en CI | imágenes y modelo validados | Testcontainers/servicio SQL efímero |
+| E2E | recorrido contractual automatizado y recorrido visual sobre Docker + SQL Server | ampliar automatización visual Playwright en CI |
+| Integración SQL en CI | Compose levanta SQL Server y ejecuta el E2E completo | migración separada contra staging antes de producción |
 | Swagger | solo Development | portal de API autenticado si se requiere |
 | Apple Silicon | funciona por emulación en Docker Desktop | SQL remoto o host x86-64 soportado |
 

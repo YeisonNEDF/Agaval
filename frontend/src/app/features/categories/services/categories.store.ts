@@ -54,13 +54,13 @@ export class CategoriesStore {
     );
   }
 
-  async deactivate(id: number): Promise<boolean> {
+  async delete(id: number): Promise<boolean> {
     this.savingState.set(true);
 
     try {
       await firstValueFrom(this.categoriesApi.delete(id));
       await this.load();
-      this.notifications.success('Categoría desactivada correctamente.');
+      this.notifications.success('Categoría eliminada correctamente.');
       return true;
     } catch (error: unknown) {
       this.notifications.error(messageFromError(error));

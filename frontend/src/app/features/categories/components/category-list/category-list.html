@@ -42,6 +42,7 @@
               mat-icon-button
               type="button"
               matTooltip="Editar categoría"
+              [attr.aria-label]="'Editar ' + category.name"
               [disabled]="saving()"
               (click)="editRequested.emit(category)"
             >
@@ -51,11 +52,12 @@
               mat-icon-button
               type="button"
               class="category-list__delete"
-              matTooltip="Desactivar categoría"
-              [disabled]="saving() || !category.isActive"
-              (click)="deactivateRequested.emit(category)"
+              matTooltip="Eliminar categoría"
+              [attr.aria-label]="'Eliminar ' + category.name"
+              [disabled]="saving()"
+              (click)="deleteRequested.emit(category)"
             >
-              <mat-icon>block</mat-icon>
+              <mat-icon>delete</mat-icon>
             </button>
           </div>
         </td>

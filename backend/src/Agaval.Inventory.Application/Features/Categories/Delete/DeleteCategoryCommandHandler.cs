@@ -15,7 +15,13 @@ public sealed class DeleteCategoryCommandHandler(
             .ConfigureAwait(false)
             ?? throw new NotFoundException("la categoría", request.Id);
 
-        category.Deactivate();
+        if (await categoryRepository.IsInUseAsync(request.Id, cancellationToken).ConfigureAwait(false))
+        {
+            throw new ConflictException(
+                "La categoría no se puede eliminar porque tiene productos asociados.");
+        }
+
+        categoryRepository.Remove(category);
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

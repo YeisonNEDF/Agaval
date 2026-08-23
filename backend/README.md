@@ -56,14 +56,14 @@ En Development, la API detecta y aplica automáticamente las migraciones pendien
 
 ## Autenticación y permisos
 
-Las consultas son públicas. Crear, modificar, desactivar/eliminar o ajustar stock exige un JWT con el rol `InventoryManager`. La cuenta Development incluida es `admin` / `Agaval_admin_2026!`; se obtiene el token mediante `POST /api/autenticacion/login`. Todas las opciones se reemplazan con variables `Authentication__*` o con las variables `AUTH_*` que traducen los launchers y Compose.
+Las consultas son públicas. Crear, modificar, eliminar o ajustar stock exige un JWT con el rol `InventoryManager`. La cuenta Development incluida es `admin` / `Agaval_admin_2026!`; se obtiene el token mediante `POST /api/autenticacion/login`. Todas las opciones se reemplazan con variables `Authentication__*` o con las variables `AUTH_*` que traducen los launchers y Compose.
 
 ## Contrato adicional
 
 - `GET /api/productos`: búsqueda, filtros, orden y paginación server-side.
 - `GET /api/productos/resumen`: métricas globales sin depender de la página actual.
 - `GET /api/movimientos-inventario`: historial paginado por producto y tipo.
-- `GET/POST/PUT/DELETE /api/categorias`: administración completa; DELETE desactiva para conservar referencias históricas.
+- `GET/POST/PUT/DELETE /api/categorias`: administración completa; DELETE elimina físicamente una categoría sin productos y responde 409 si está en uso.
 - `POST /api/autenticacion/login`: sesión JWT firmada y con expiración.
 
 ## Migraciones
@@ -86,4 +86,4 @@ dotnet test Agaval.Inventory.slnx --configuration Release --no-build
 dotnet list Agaval.Inventory.slnx package --vulnerable --include-transitive
 ```
 
-Resultados de la última verificación: 17 pruebas aprobadas, incluidas autenticación, CRUD de categorías, paginación, historial y el ciclo HTTP de productos; build Release sin warnings ni errores.
+Resultados de la última verificación: 16 pruebas aprobadas (8 Domain, 5 Application y 3 funcionales), incluidas autenticación, CRUD físico de categorías con integridad referencial, paginación, historial y el ciclo HTTP de productos; build Release sin warnings ni errores.

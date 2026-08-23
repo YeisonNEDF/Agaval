@@ -63,11 +63,11 @@ export class CategoriesPageComponent {
     }
   }
 
-  async confirmDeactivate(category: ManagedCategory): Promise<void> {
+  async confirmDelete(category: ManagedCategory): Promise<void> {
     const data: ConfirmDialogData = {
-      title: 'Desactivar categoría',
-      message: `“${category.name}” dejará de estar disponible para nuevos productos. Los productos existentes conservarán su clasificación.`,
-      confirmLabel: 'Desactivar',
+      title: 'Eliminar categoría',
+      message: `Se eliminará “${category.name}”. Si tiene productos asociados, la operación será rechazada para proteger la integridad del inventario.`,
+      confirmLabel: 'Eliminar categoría',
     };
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data,
@@ -77,7 +77,7 @@ export class CategoriesPageComponent {
     });
 
     if (await firstValueFrom(dialogRef.afterClosed())) {
-      await this.store.deactivate(category.id);
+      await this.store.delete(category.id);
     }
   }
 }

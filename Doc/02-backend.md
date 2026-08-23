@@ -15,7 +15,7 @@ Representa una violación de invariantes del negocio. Permite distinguir una ent
 
 ### `Entities/Category.cs`
 
-Modela una categoría con `Id`, `Name` y `IsActive`. Normaliza el nombre, impide valores vacíos o superiores a 100 caracteres y expone `Update`/`Deactivate` para el CRUD con baja lógica.
+Modela una categoría con `Id`, `Name` y `IsActive`. Normaliza el nombre, impide valores vacíos o superiores a 100 caracteres y expone `Update`; la eliminación pertenece al caso de uso y al repositorio porque cambia la persistencia, no el estado interno de la entidad.
 
 ### `Entities/Product.cs`
 
@@ -40,7 +40,7 @@ Enum tipado `Entry/Exit`. API lo serializa como texto; Infrastructure lo convier
 ### Puertos de persistencia
 
 - `IProductRepository`: consulta paginada/ordenada, resumen, búsqueda por id, alta y baja.
-- `ICategoryRepository`: listado completo o activo, búsqueda, unicidad, alta y actualización.
+- `ICategoryRepository`: listado completo o activo, búsqueda, unicidad, alta, actualización, comprobación de uso y eliminación.
 - `IInventoryMovementRepository`: historial paginado por producto y tipo.
 - `IIdentityService`: valida la identidad configurable y emite un token sin acoplar Application a JWT.
 - `IUnitOfWork`: frontera explícita de confirmación con `SaveChangesAsync`.
@@ -64,7 +64,7 @@ Las interfaces viven en Application; Infrastructure depende de ellas, no al cont
 
 ### Categories
 
-Los slices `GetList`, `GetById`, `Create`, `Update` y `Delete` cubren el CRUD. La creación/edición valida unicidad sin distinguir mayúsculas. `Delete` desactiva la fila para conservar integridad con productos; el endpoint de categorías activas continúa alimentando formularios.
+Los slices `GetList`, `GetById`, `Create`, `Update` y `Delete` cubren el CRUD. La creación/edición valida unicidad sin distinguir mayúsculas. `Delete` comprueba si existen productos asociados: responde conflicto si está en uso y, en caso contrario, elimina físicamente la fila. El endpoint de categorías activas continúa alimentando formularios.
 
 ### Authentication y movimientos
 
@@ -155,7 +155,7 @@ Cada acción solo traduce el request a un mensaje MediatR y traduce el resultado
 
 ### `CategoriesController.cs`
 
-Expone listado, detalle, alta, edición y baja lógica. Las escrituras requieren `InventoryWrite`; `incluirInactivas=true` permite administrar todo el catálogo.
+Expone listado, detalle, alta, edición y eliminación física. Las escrituras requieren `InventoryWrite`; `incluirInactivas=true` permite administrar todo el catálogo. Una eliminación que violaría la relación restrictiva devuelve HTTP 409 antes de llegar a SQL Server.
 
 ### `AuthenticationController.cs` e `InventoryMovementsController.cs`
 
@@ -179,7 +179,7 @@ Convierte validaciones e invariantes de dominio a 400, autenticación fallida a 
 - `CreateProductCommandHandlerTests`: orquestación sin base de datos mediante dobles de repositorio.
 - `ArchitectureDependencyTests`: impide referencias prohibidas desde Domain y Application.
 - `ProductsEndpointsTests`: recorre por HTTP autorización, validación, CRUD, stock bajo, ajuste, historial, paginación y resumen.
-- `CategoriesEndpointsTests`: demuestra 401, alta, conflicto por nombre, edición y desactivación persistida.
+- `CategoriesEndpointsTests`: demuestra 401, alta, conflicto por nombre, edición, 409 al eliminar una categoría usada y eliminación física después de liberar la relación.
 - `AuthenticationEndpointsTests`: rechaza credenciales inválidas y valida la sesión JWT.
 
-La verificación actual ejecuta 17 pruebas .NET: 9 de dominio, 5 de Application y 3 funcionales.
+La verificación actual ejecuta 16 pruebas .NET: 8 de Domain, 5 de Application y 3 funcionales.

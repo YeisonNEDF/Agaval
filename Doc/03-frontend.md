@@ -136,7 +136,7 @@ Declara las vistas `''` y `stock-bajo` reutilizando la misma página lazy y prov
 
 ## Feature Categories
 
-`features/categories` conserva `models`, `services`, `components`, `pages` y `routes.ts`. Su store carga activas e inactivas. `CategoryFormComponent` solo gestiona el formulario; `CategoryListComponent` solo presenta y emite acciones; `CategoriesPageComponent` coordina crear, editar y desactivar/reactivar. La ruta es lazy y exige autenticación.
+`features/categories` conserva `models`, `services`, `components`, `pages` y `routes.ts`. Su store carga activas e inactivas. `CategoryFormComponent` solo gestiona el formulario; `CategoryListComponent` solo presenta y emite acciones; `CategoriesPageComponent` coordina crear, editar y eliminar. Si la API informa que una categoría está asociada a productos, el interceptor presenta el conflicto y conserva la fila. La ruta es lazy y exige autenticación.
 
 ## Feature Inventory Movements
 
@@ -161,4 +161,4 @@ Cada componente posee un bloque BEM raíz y elementos con `__`. Los media querie
 
 ## Pruebas frontend
 
-Los 26 specs cubren shell, shared, filtros, tabla/paginador, formulario, ajuste, página, rutas opcionales, token, categorías, movimientos y contratos HTTP. Cada TestBed activa explícitamente zoneless para reproducir la configuración real y verifica comportamiento observable, no detalles internos del framework.
+Las 38 pruebas cubren shell, shared, login, filtros, tabla/paginador, formularios, ajuste, páginas, rutas lazy, token, accesibilidad de acciones, categorías, movimientos y contratos HTTP. Los 16 componentes tienen un `.spec.ts` colocado junto a sus archivos de implementación. Cada TestBed activa explícitamente zoneless para reproducir la configuración real y verifica comportamiento observable, no detalles internos del framework.

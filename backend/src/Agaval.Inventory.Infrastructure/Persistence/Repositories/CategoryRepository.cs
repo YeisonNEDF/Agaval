@@ -55,5 +55,10 @@ internal sealed class CategoryRepository(PersistenceContext context) : ICategory
                 (!excludedId.HasValue || category.Id != excludedId.Value),
             cancellationToken);
 
+    public Task<bool> IsInUseAsync(int id, CancellationToken cancellationToken) =>
+        context.Products.AnyAsync(product => product.CategoryId == id, cancellationToken);
+
     public void Add(Category category) => context.Categories.Add(category);
+
+    public void Remove(Category category) => context.Categories.Remove(category);
 }

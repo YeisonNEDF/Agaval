@@ -37,6 +37,9 @@ jobs:
       AUTH_JWT_SIGNING_KEY: ${{ secrets.AUTH_JWT_SIGNING_KEY }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
 
       - name: Authenticate to Azure with OIDC
         uses: azure/login@v3
@@ -108,17 +111,7 @@ jobs:
       - name: Verify deployed application
         env:
           FRONTEND_URL: ${{ steps.apps.outputs.frontend_url }}
-        run: |
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent --show-error "$FRONTEND_URL/health" >/dev/null \
-              && curl --fail --silent --show-error "$FRONTEND_URL/api/productos?pagina=1&tamanoPagina=5" >/dev/null; then
-              echo "AGAVAL deployed at $FRONTEND_URL"
-              exit 0
-            fi
-            sleep 10
-          done
-          echo "Deployment did not become healthy: $FRONTEND_URL" >&2
-          exit 1
+        run: node scripts/e2e-smoke.mjs "$FRONTEND_URL" "$FRONTEND_URL"
 
       - name: Publish deployment URL
         run: echo "### AGAVAL deployment\n${{ steps.apps.outputs.frontend_url }}" >> "$GITHUB_STEP_SUMMARY"

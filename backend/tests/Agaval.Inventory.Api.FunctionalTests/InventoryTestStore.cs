@@ -129,11 +129,16 @@ internal sealed class InventoryTestStore :
                 category.Id != excludedId &&
                 string.Equals(category.Name, name, StringComparison.OrdinalIgnoreCase)));
 
+    public Task<bool> IsInUseAsync(int id, CancellationToken cancellationToken) =>
+        Task.FromResult(products.Values.Any(product => product.CategoryId == id));
+
     public void Add(Category category)
     {
         CategoryIdProperty.SetValue(category, nextCategoryId++);
         categories.Add(category.Id, category);
     }
+
+    public void Remove(Category category) => categories.Remove(category.Id);
 
     public Task<PagedResult<InventoryMovement>> ListAsync(
         InventoryMovementFilter filter,

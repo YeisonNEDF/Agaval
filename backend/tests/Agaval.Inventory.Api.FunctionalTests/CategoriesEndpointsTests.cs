@@ -1,14 +1,16 @@
 using System.Net;
 using System.Net.Http.Json;
 using Agaval.Inventory.Api.Contracts.Categories;
+using Agaval.Inventory.Api.Contracts.Products;
 using Agaval.Inventory.Application.Features.Categories;
+using Agaval.Inventory.Application.Features.Products;
 
 namespace Agaval.Inventory.Api.FunctionalTests;
 
 public sealed class CategoriesEndpointsTests
 {
     [Fact]
-    public async Task CategoryLifecycleRequiresAuthenticationAndPreservesInactiveRecord()
+    public async Task CategoryCrudRequiresAuthenticationAndProtectsReferentialIntegrity()
     {
         await using var factory = new InventoryApiFactory();
         using var client = factory.CreateClient();
@@ -38,12 +40,28 @@ public sealed class CategoriesEndpointsTests
             new UpdateCategoryRequest("Herramientas", true));
         Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
 
+        var productResponse = await client.PostAsJsonAsync(
+            "/api/productos",
+            new CreateProductRequest("Martillo", null, 45_000m, 3, 1, created.Id));
+        Assert.Equal(HttpStatusCode.Created, productResponse.StatusCode);
+        var product = await productResponse.Content.ReadFromJsonAsync<ProductDto>();
+        Assert.NotNull(product);
+
+        var protectedDeleteResponse = await client.DeleteAsync($"/api/categorias/{created.Id}");
+        Assert.Equal(HttpStatusCode.Conflict, protectedDeleteResponse.StatusCode);
+
+        var productDeleteResponse = await client.DeleteAsync($"/api/productos/{product.Id}");
+        Assert.Equal(HttpStatusCode.NoContent, productDeleteResponse.StatusCode);
+
         var deleteResponse = await client.DeleteAsync($"/api/categorias/{created.Id}");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        var missingResponse = await client.GetAsync($"/api/categorias/{created.Id}");
+        Assert.Equal(HttpStatusCode.NotFound, missingResponse.StatusCode);
 
         var categories = await client.GetFromJsonAsync<CategoryDto[]>(
             "/api/categorias?incluirInactivas=true");
         Assert.NotNull(categories);
-        Assert.Contains(categories, category => category.Id == created.Id && !category.IsActive);
+        Assert.DoesNotContain(categories, category => category.Id == created.Id);
     }
 }

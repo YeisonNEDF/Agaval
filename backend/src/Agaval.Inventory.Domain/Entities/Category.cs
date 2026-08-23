@@ -40,8 +40,6 @@ public sealed class Category
         IsActive = isActive;
     }
 
-    public void Deactivate() => IsActive = false;
-
     private static string NormalizeName(string name)
     {
         var normalizedName = name?.Trim() ?? string.Empty;

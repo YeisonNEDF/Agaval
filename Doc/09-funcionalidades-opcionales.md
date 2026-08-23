@@ -10,7 +10,7 @@ La sección marcada como opcional/no requerida en la prueba se implementó compl
 | Movimientos | consulta paginada de la tabla existente | filtros, tabla y paginador | ajuste de stock seguido de consulta |
 | Autenticación/autorización | JWT Bearer y política por rol | store, guard, interceptor y login | 401, credencial inválida y token válido |
 | Paginación avanzada | filtros/orden/conteo/`Skip`/`Take` en SQL | URL, `MatSort` y `MatPaginator` | prueba HTTP y specs de componentes |
-| Pruebas | dominio, Application y HTTP | servicios, interceptor, rutas y UI | 17 .NET + 26 Angular |
+| Pruebas | dominio, Application y HTTP | todos los componentes, servicios, interceptor, rutas y UI | 16 .NET + 38 Angular + E2E SQL |
 | Cloud | Container Apps, ACR y Azure SQL | Nginx como frontend/proxy | Bicep validado y workflow de verificación |
 
 ## Estructura respetada
@@ -42,7 +42,7 @@ backend/src/
     └── Infrastructure/AuthorizationPolicies.cs
 ```
 
-- Domain normaliza categorías y mantiene la baja lógica como comportamiento.
+- Domain normaliza y actualiza categorías; Application controla su eliminación y la integridad referencial.
 - Application declara mensajes, validators, handlers y puertos; no conoce JWT, EF Core ni ASP.NET.
 - Infrastructure implementa consultas SQL y la emisión criptográfica del token.
 - API traduce HTTP, configura autenticación/autorización y serializa Problem Details.
@@ -83,7 +83,7 @@ frontend/src/app/
         └── routes.ts
 ```
 
-Los componentes visuales conservan `.ts`, `.html`, `.scss` y, cuando contienen comportamiento relevante, `.spec.ts`. Los stores coordinan estado; los servicios encapsulan HTTP; las pages orquestan; los componentes presentan y emiten intenciones.
+Todos los componentes visuales conservan `.ts`, `.html`, `.scss` y `.spec.ts` en la misma carpeta. Los stores coordinan estado; los servicios encapsulan HTTP; las pages orquestan; los componentes presentan y emiten intenciones.
 
 ## 1. CRUD de categorías
 
@@ -103,13 +103,13 @@ Rutas:
 | `GET` | `/api/categorias/{id}` | pública | detalle incluso inactivo |
 | `POST` | `/api/categorias` | `InventoryWrite` | 201 o 409 si el nombre existe |
 | `PUT` | `/api/categorias/{id}` | `InventoryWrite` | cambia nombre y estado |
-| `DELETE` | `/api/categorias/{id}` | `InventoryWrite` | 204 y baja lógica |
+| `DELETE` | `/api/categorias/{id}` | `InventoryWrite` | 204 físico o 409 si tiene productos |
 
-La baja es lógica porque una eliminación física podría romper productos existentes. Reactivar se realiza mediante `PUT` con `isActive: true`.
+La eliminación es física para cumplir el CRUD solicitado. Antes de borrar, Application consulta si la categoría está en uso y devuelve HTTP 409; cuando no tiene productos, EF Core ejecuta la eliminación y una consulta posterior devuelve 404.
 
 ### Flujo frontend
 
-`CategoriesPageComponent` coordina el dialog y el store. `CategoryFormComponent` solo conoce el formulario tipado. `CategoryListComponent` recibe filas y emite editar/desactivar/reactivar. La ruta `/categorias` se carga de forma lazy y el guard devuelve al login conservando la URL de retorno.
+`CategoriesPageComponent` coordina el dialog y el store. `CategoryFormComponent` solo conoce el formulario tipado. `CategoryListComponent` recibe filas y emite editar/eliminar. La ruta `/categorias` se carga de forma lazy y el guard devuelve al login conservando la URL de retorno.
 
 ## 2. Historial de movimientos
 
@@ -189,7 +189,7 @@ EF Core calcula primero el total y después aplica un orden determinista, `Skip`
 
 Backend:
 
-- `CategoryTests`: normalización, actualización, desactivación y nombre inválido;
+- `CategoryTests`: normalización, actualización y nombre inválido;
 - `AuthenticationEndpointsTests`: 401 y JWT válido;
 - `CategoriesEndpointsTests`: permiso, ciclo completo y conflicto 409;
 - `ProductsEndpointsTests`: permiso, página/búsqueda/orden, resumen y movimiento.
@@ -200,6 +200,7 @@ Frontend:
 - servicio y lista de categorías;
 - servicio y lista de movimientos;
 - disponibilidad/lazy loading de rutas opcionales;
+- specs co-localizados para los 16 componentes;
 - adaptación de las pruebas de productos a paginación y permisos.
 
 Comandos de evidencia:
@@ -217,9 +218,9 @@ npm run build
 npm audit
 ```
 
-Resultado actual: 17/17 pruebas .NET y 26/26 specs Angular, compilaciones exitosas, lint limpio, cero advertencias .NET, cero vulnerabilidades npm y modelo EF sin cambios pendientes.
+Resultado actual: 16/16 pruebas .NET y 38/38 pruebas Angular, compilaciones exitosas, lint limpio, cero advertencias .NET, cero vulnerabilidades npm y modelo EF sin cambios pendientes. `scripts/e2e-smoke.mjs` valida además el flujo completo a través del frontend/proxy contra API y SQL Server reales; el workflow CI repite esa prueba tanto en Windows nativo como con Docker Compose.
 
-## 6. Despliegue Azure preparado
+## 6. Despliegue Azure automatizado
 
 ### Recursos
 
@@ -247,7 +248,7 @@ Resultado actual: 17/17 pruebas .NET y 26/26 specs Angular, compilaciones exitos
 3. despliega infraestructura Bicep;
 4. construye y publica imágenes etiquetadas con `GITHUB_SHA`;
 5. despliega las dos Container Apps;
-6. espera y verifica frontend `/health` y `/api/productos`;
+6. ejecuta el mismo E2E integral sobre la URL pública: rutas SPA, JWT, CRUD, integridad de categorías, stock, movimientos, filtros y paginación;
 7. publica la URL en el resumen del workflow.
 
 El environment de GitHub se llama `production` y requiere estos secrets:
