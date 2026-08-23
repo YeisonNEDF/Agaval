@@ -56,7 +56,7 @@ En Development, la API detecta y aplica automáticamente las migraciones pendien
 
 ## Autenticación y permisos
 
-Las consultas son públicas. Crear, modificar, eliminar o ajustar stock exige un JWT con el rol `InventoryManager`. La cuenta Development incluida es `admin` / `Agaval_admin_2026!`; se obtiene el token mediante `POST /api/autenticacion/login`. Todas las opciones se reemplazan con variables `Authentication__*` o con las variables `AUTH_*` que traducen los launchers y Compose.
+Productos, categorías y movimientos exigen un JWT válido incluso para consultas. Crear, modificar, eliminar o ajustar stock exige además el rol `InventoryManager`. Solo `POST /api/autenticacion/login` y `/health` permanecen anónimos. La cuenta Development incluida es `admin` / `Agaval_admin_2026!`; todas las opciones se reemplazan con variables `Authentication__*` o con las variables `AUTH_*` que traducen los launchers y Compose.
 
 ## Contrato adicional
 
@@ -86,4 +86,4 @@ dotnet test Agaval.Inventory.slnx --configuration Release --no-build
 dotnet list Agaval.Inventory.slnx package --vulnerable --include-transitive
 ```
 
-Resultados de la última verificación: 16 pruebas aprobadas (8 Domain, 5 Application y 3 funcionales), incluidas autenticación, CRUD físico de categorías con integridad referencial, paginación, historial y el ciclo HTTP de productos; build Release sin warnings ni errores.
+Resultados de la última verificación: 17 pruebas aprobadas (8 Domain, 5 Application y 4 funcionales), incluidas consultas protegidas, autenticación, CRUD físico de categorías con integridad referencial, paginación, historial y el ciclo HTTP de productos; build Release sin warnings ni errores.

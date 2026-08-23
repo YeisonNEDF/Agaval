@@ -8,6 +8,26 @@ namespace Agaval.Inventory.Api.FunctionalTests;
 public sealed class AuthenticationEndpointsTests
 {
     [Fact]
+    public async Task InventoryQueriesRequireAuthentication()
+    {
+        await using var factory = new InventoryApiFactory();
+        using var client = factory.CreateClient();
+        var protectedUrls = new[]
+        {
+            "/api/productos",
+            "/api/productos/stock-bajo",
+            "/api/categorias",
+            "/api/movimientos-inventario",
+        };
+
+        foreach (var url in protectedUrls)
+        {
+            var response = await client.GetAsync(url);
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+    }
+
+    [Fact]
     public async Task LoginReturnsSignedSessionAndRejectsInvalidCredentials()
     {
         await using var factory = new InventoryApiFactory();

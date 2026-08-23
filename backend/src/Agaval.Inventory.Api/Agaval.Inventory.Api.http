@@ -7,6 +7,7 @@ Accept: application/json
 ###
 
 GET {{AgavalInventoryApi}}/api/categorias
+Authorization: Bearer {{token}}
 Accept: application/json
 
 ###
@@ -22,21 +23,25 @@ Content-Type: application/json
 ###
 
 GET {{AgavalInventoryApi}}/api/productos?stock=All&buscar=&pagina=1&tamanoPagina=10&ordenarPor=Name&direccion=Ascending
+Authorization: Bearer {{token}}
 Accept: application/json
 
 ###
 
 GET {{AgavalInventoryApi}}/api/productos/resumen
+Authorization: Bearer {{token}}
 Accept: application/json
 
 ###
 
 GET {{AgavalInventoryApi}}/api/movimientos-inventario?pagina=1&tamanoPagina=10
+Authorization: Bearer {{token}}
 Accept: application/json
 
 ###
 
 GET {{AgavalInventoryApi}}/api/categorias?incluirInactivas=true
+Authorization: Bearer {{token}}
 Accept: application/json
 
 ###

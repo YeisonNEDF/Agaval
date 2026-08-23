@@ -73,9 +73,9 @@ Aunque el enunciado permite omitirla, se implementó completa:
 | --- | --- | --- |
 | CRUD de categorías backend y frontend | Cumplido | vertical slices `Features/Categories`, `CategoriesController` y `features/categories` |
 | Registro/consulta de movimientos | Cumplido | tabla existente, endpoint paginado y feature `/movimientos` |
-| Autenticación/autorización | Cumplido | JWT Bearer, rol `InventoryManager`, login y guard/interceptor Angular |
+| Autenticación/autorización | Cumplido | JWT obligatorio para toda feature/API de inventario, rol `InventoryManager`, guards e interceptor Angular |
 | Paginación avanzada | Cumplido | búsqueda, filtros, orden, conteo y páginas ejecutados en SQL Server |
-| Pruebas unitarias/integración | Cumplido | 16 pruebas .NET, 38 pruebas Angular y E2E contra SQL Server real |
+| Pruebas unitarias/integración | Cumplido | 17 pruebas .NET, 50 pruebas Angular y E2E contra SQL Server real |
 | Despliegue cloud | Implementado y validado | Azure Container Apps, ACR y Azure SQL con Bicep validado + workflow OIDC manual |
 
 El despliegue cloud queda automatizado y reproducible, pero no se ejecuta contra una suscripción ajena sin las credenciales Azure del propietario. El detalle técnico y operativo está en `Doc/09-funcionalidades-opcionales.md`.

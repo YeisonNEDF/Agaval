@@ -82,7 +82,7 @@ Cada feature posee un store provisto en su ruta lazy. Sus `signal` privados son 
 
 ## Seguridad
 
-El login entrega un JWT HMAC-SHA256 con issuer, audience, expiración, nombre y rol. Las consultas permanecen públicas para facilitar revisión; las escrituras requieren la política `InventoryWrite`, asociada a `InventoryManager`. Angular conserva la sesión en `sessionStorage`, expira automáticamente el estado y adjunta el bearer token solo a URLs `/api`. La identidad configurable es adecuada para la prueba; producción debe federar un proveedor OIDC y rotar los secretos.
+El login entrega un JWT HMAC-SHA256 con issuer, audience, expiración, nombre y rol. Toda consulta de inventario exige autenticación; las escrituras requieren además la política `InventoryWrite`, asociada a `InventoryManager`. Angular conserva la sesión en `sessionStorage`, protege las rutas lazy, expira automáticamente el estado, redirige al login conservando la URL y adjunta el bearer token solo a URLs `/api`. La identidad configurable es adecuada para la prueba; producción debe federar un proveedor OIDC y rotar los secretos.
 
 ## Integración HTTP
 

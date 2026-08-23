@@ -12,3 +12,10 @@ export const authenticationGuard: CanActivateFn = (_route, state) => {
     queryParams: { returnUrl: state.url },
   });
 };
+
+export const guestGuard: CanActivateFn = () => {
+  const authentication = inject(AuthenticationStore);
+  return authentication.isAuthenticated()
+    ? inject(Router).createUrlTree(['/productos'])
+    : true;
+};

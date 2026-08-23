@@ -10,7 +10,7 @@ La sección marcada como opcional/no requerida en la prueba se implementó compl
 | Movimientos | consulta paginada de la tabla existente | filtros, tabla y paginador | ajuste de stock seguido de consulta |
 | Autenticación/autorización | JWT Bearer y política por rol | store, guard, interceptor y login | 401, credencial inválida y token válido |
 | Paginación avanzada | filtros/orden/conteo/`Skip`/`Take` en SQL | URL, `MatSort` y `MatPaginator` | prueba HTTP y specs de componentes |
-| Pruebas | dominio, Application y HTTP | todos los componentes, servicios, interceptor, rutas y UI | 16 .NET + 38 Angular + E2E SQL |
+| Pruebas | dominio, Application y HTTP | componentes, sesión, guards, servicios, interceptor, rutas y UI | 17 .NET + 50 Angular + E2E SQL |
 | Cloud | Container Apps, ACR y Azure SQL | Nginx como frontend/proxy | Bicep validado y workflow de verificación |
 
 ## Estructura respetada
@@ -99,8 +99,8 @@ Rutas:
 
 | Método | Ruta | Seguridad | Resultado |
 | --- | --- | --- | --- |
-| `GET` | `/api/categorias` | pública | activas; acepta `incluirInactivas=true` |
-| `GET` | `/api/categorias/{id}` | pública | detalle incluso inactivo |
+| `GET` | `/api/categorias` | autenticada | activas; acepta `incluirInactivas=true` |
+| `GET` | `/api/categorias/{id}` | autenticada | detalle incluso inactivo |
 | `POST` | `/api/categorias` | `InventoryWrite` | 201 o 409 si el nombre existe |
 | `PUT` | `/api/categorias/{id}` | `InventoryWrite` | cambia nombre y estado |
 | `DELETE` | `/api/categorias/{id}` | `InventoryWrite` | 204 físico o 409 si tiene productos |
@@ -141,7 +141,7 @@ Content-Type: application/json
 
 La respuesta contiene `accessToken`, `tokenType`, `expiresAt`, `username` y `role`. El JWT HS256 valida firma, issuer, audience y expiración con un margen máximo de 30 segundos. Las credenciales se comparan en tiempo constante.
 
-Las lecturas son públicas. Los `POST`, `PUT`, `DELETE` y ajustes de stock requieren el rol configurado en la política `InventoryWrite`. Swagger declara el esquema Bearer para probar el contrato en Development.
+Productos, categorías y movimientos requieren un JWT válido tanto para lectura como escritura. Los `POST`, `PUT`, `DELETE` y ajustes de stock requieren además el rol configurado en la política `InventoryWrite`. Solo login y health son anónimos. Swagger declara el esquema Bearer para probar el contrato en Development.
 
 Angular persiste la sesión únicamente en `sessionStorage` (no entre cierres completos del navegador), programa su expiración y adjunta el token solo a `/api`. Un 401 elimina la sesión. Para producción, `IIdentityService` permite reemplazar la identidad local por OIDC/Entra ID sin trasladar esa dependencia a Application.
 
@@ -199,7 +199,7 @@ Frontend:
 - interceptor de token;
 - servicio y lista de categorías;
 - servicio y lista de movimientos;
-- disponibilidad/lazy loading de rutas opcionales;
+- guards, persistencia/expiración de sesión y lazy loading de todas las rutas protegidas;
 - specs co-localizados para los 16 componentes;
 - adaptación de las pruebas de productos a paginación y permisos.
 
@@ -218,7 +218,7 @@ npm run build
 npm audit
 ```
 
-Resultado actual: 16/16 pruebas .NET y 38/38 pruebas Angular, compilaciones exitosas, lint limpio, cero advertencias .NET, cero vulnerabilidades npm y modelo EF sin cambios pendientes. `scripts/e2e-smoke.mjs` valida además el flujo completo a través del frontend/proxy contra API y SQL Server reales; el workflow CI repite esa prueba tanto en Windows nativo como con Docker Compose.
+Resultado actual: 17/17 pruebas .NET y 50/50 pruebas Angular, compilaciones exitosas, lint limpio, cero advertencias .NET, cero vulnerabilidades npm y modelo EF sin cambios pendientes. `scripts/e2e-smoke.mjs` valida además 401 en todas las consultas anónimas y el flujo autenticado completo a través del frontend/proxy contra API y SQL Server reales; el workflow CI repite esa prueba tanto en Windows nativo como con Docker Compose.
 
 ## 6. Despliegue Azure automatizado
 

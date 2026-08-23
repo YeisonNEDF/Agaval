@@ -1,4 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../models/api-error.model';
 import { AuthenticationApiService } from './authentication-api.service';
@@ -9,6 +10,7 @@ const SESSION_STORAGE_KEY = 'agaval.auth.session';
 @Injectable({ providedIn: 'root' })
 export class AuthenticationStore {
   private readonly authenticationApi = inject(AuthenticationApiService);
+  private readonly router = inject(Router);
   private readonly sessionState = signal<AuthSession | null>(readStoredSession());
   private readonly loadingState = signal(false);
   private readonly errorState = signal<string | null>(null);
@@ -46,6 +48,16 @@ export class AuthenticationStore {
   logout(): void {
     this.setSession(null);
     this.errorState.set(null);
+    void this.router.navigateByUrl('/login');
+  }
+
+  expireSession(): void {
+    const currentUrl = this.router.url;
+    this.setSession(null);
+    this.errorState.set(null);
+    void this.router.navigate(['/login'], {
+      queryParams: currentUrl.startsWith('/login') ? {} : { returnUrl: currentUrl },
+    });
   }
 
   private setSession(session: AuthSession | null): void {
@@ -71,12 +83,12 @@ export class AuthenticationStore {
 
     const remainingMilliseconds = new Date(session.expiresAt).getTime() - Date.now();
     if (remainingMilliseconds <= 0) {
-      this.logout();
+      this.expireSession();
       return;
     }
 
     this.expirationTimer = setTimeout(
-      () => this.logout(),
+      () => this.expireSession(),
       Math.min(remainingMilliseconds, 2_147_483_647),
     );
   }

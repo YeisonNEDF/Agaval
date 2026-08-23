@@ -252,15 +252,15 @@ El pipeline repite restore, format, build, test, lint, auditoría de dependencia
 ## Guion de demostración de 5 a 7 minutos
 
 1. Ejecutar el launcher y mostrar que espera API/frontend.
-2. Abrir el dashboard y explicar métricas globales, búsqueda y paginación de servidor.
-3. Iniciar sesión con la cuenta de evaluación y mostrar cómo aparecen las acciones protegidas.
+2. Intentar abrir el inventario sin sesión y mostrar la redirección con `returnUrl`.
+3. Iniciar sesión con la cuenta de evaluación y explicar métricas globales, búsqueda y paginación de servidor.
 4. Filtrar por categoría/stock y ordenar la tabla.
 5. Crear y editar un producto, provocando primero una validación visible.
 6. Registrar una entrada y consultar el registro en `/movimientos`.
 7. Intentar una salida superior al stock para mostrar la regla del dominio y Problem Details.
 8. Crear, editar y eliminar una categoría en `/categorias`; explicar el 409 si está en uso.
 9. Eliminar el producto con confirmación y mostrar un vertical slice/Store.
-10. Cerrar con las 54 pruebas, el E2E sobre SQL Server y el despliegue Azure automatizado.
+10. Cerrar con las 67 pruebas, el E2E autenticado sobre SQL Server y el despliegue Azure automatizado.
 
 La API aplica migraciones antes de mapear tráfico, de modo que una base inaccesible impide el arranque inicial. El health check actual confirma el proceso API; no debe presentarse como una comprobación SQL continua.
 
@@ -269,7 +269,7 @@ Para no arriesgar la demo, antes de la entrevista:
 ```bash
 ./start.sh --status
 curl --fail http://localhost:5100/health
-curl --fail http://localhost:5100/api/productos
+node scripts/e2e-smoke.mjs http://localhost:5100 http://localhost:4200
 ```
 
 En Windows se puede usar `Invoke-WebRequest` en lugar de `curl`.

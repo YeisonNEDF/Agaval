@@ -57,7 +57,7 @@ Intercepta errores HTTP, extrae el mensaje más útil, notifica al usuario y vue
 
 ### `core/authentication` y `auth-token.interceptor.ts`
 
-`AuthenticationApiService` encapsula el login. `AuthenticationStore` conserva una sesión tipada en `sessionStorage`, valida su expiración y expone `isAuthenticated`. El guard preserva la URL de retorno. El interceptor agrega `Authorization: Bearer` únicamente a peticiones `/api` y limpia una sesión rechazada con 401.
+`AuthenticationApiService` encapsula el login. `AuthenticationStore` conserva una sesión tipada en `sessionStorage`, valida su expiración y expone `isAuthenticated`. El guard protege productos, stock bajo, movimientos y categorías preservando la URL de retorno; el guard de invitado evita volver al login con una sesión activa. El interceptor agrega `Authorization: Bearer` únicamente a peticiones `/api`; una expiración o 401 elimina la sesión y redirige inmediatamente al login.
 
 ### `core/services/notification.service.ts`
 
@@ -106,7 +106,7 @@ Componente presentacional. Recibe categorías y filtros, y emite búsqueda/cambi
 
 ### `ProductListComponent`
 
-Recibe la página y el permiso de gestión; emite ajuste, edición, eliminación, cambio de página y orden. En escritorio renderiza una tabla Material con `MatSort`/`MatPaginator`; en pantallas angostas las filas se reorganizan como tarjetas. Las acciones no aparecen en modo consulta anónimo.
+Recibe la página y el permiso de gestión; emite ajuste, edición, eliminación, cambio de página y orden. En escritorio renderiza una tabla Material con `MatSort`/`MatPaginator`; en pantallas angostas las filas se reorganizan como tarjetas. La feature solo se activa después de autenticar al usuario.
 
 ### `ProductFormComponent`
 
@@ -140,7 +140,7 @@ Declara las vistas `''` y `stock-bajo` reutilizando la misma página lazy y prov
 
 ## Feature Inventory Movements
 
-`features/inventory-movements` sigue la misma estructura. El filtro selecciona producto y tipo; el listado presenta fecha, producto, entrada/salida, cantidad y observación; el store conserva página y carga desde el endpoint paginado. Es una vista pública de auditoría y no modifica inventario.
+`features/inventory-movements` sigue la misma estructura. El filtro selecciona producto y tipo; el listado presenta fecha, producto, entrada/salida, cantidad y observación; el store conserva página y carga desde el endpoint paginado. Es una vista autenticada de auditoría y no modifica inventario.
 
 ## Feature Authentication
 
@@ -161,4 +161,4 @@ Cada componente posee un bloque BEM raíz y elementos con `__`. Los media querie
 
 ## Pruebas frontend
 
-Las 38 pruebas cubren shell, shared, login, filtros, tabla/paginador, formularios, ajuste, páginas, rutas lazy, token, accesibilidad de acciones, categorías, movimientos y contratos HTTP. Los 16 componentes tienen un `.spec.ts` colocado junto a sus archivos de implementación. Cada TestBed activa explícitamente zoneless para reproducir la configuración real y verifica comportamiento observable, no detalles internos del framework.
+Las 50 pruebas cubren shell autenticado/anónimo, persistencia y expiración de sesión, guards, rutas lazy protegidas, login, filtros, tabla/paginador, formularios, ajuste, token/401, accesibilidad de acciones, categorías, movimientos y contratos HTTP. Los 16 componentes tienen un `.spec.ts` colocado junto a sus archivos de implementación. Cada TestBed activa explícitamente zoneless para reproducir la configuración real y verifica comportamiento observable, no detalles internos del framework.

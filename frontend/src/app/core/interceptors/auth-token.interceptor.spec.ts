@@ -28,4 +28,30 @@ describe('authTokenInterceptor', () => {
     request.flush({});
     httpTesting.verify();
   });
+
+  it('expires the active session when the API rejects its token', () => {
+    const expireSession = jasmine.createSpy('expireSession');
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([authTokenInterceptor])),
+        provideHttpClientTesting(),
+        provideZonelessChangeDetection(),
+        {
+          provide: AuthenticationStore,
+          useValue: { accessToken: signal('expired-token'), expireSession },
+        },
+      ],
+    });
+    const http = TestBed.inject(HttpClient);
+    const httpTesting = TestBed.inject(HttpTestingController);
+
+    http.get('/api/productos').subscribe({ error: () => undefined });
+    httpTesting.expectOne('/api/productos').flush(null, {
+      status: 401,
+      statusText: 'Unauthorized',
+    });
+
+    expect(expireSession).toHaveBeenCalledTimes(1);
+    httpTesting.verify();
+  });
 });

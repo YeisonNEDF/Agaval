@@ -17,6 +17,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Agaval.Inventory.Api.Controllers;
 
 [ApiController]
+[Authorize]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [Route("api/productos")]
 public sealed class ProductsController(ISender sender) : ControllerBase
 {

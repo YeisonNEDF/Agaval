@@ -113,6 +113,14 @@ try {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password: 'credencial-incorrecta' }),
   });
+  for (const protectedPath of [
+    '/productos',
+    '/productos/stock-bajo',
+    '/categorias',
+    '/movimientos-inventario',
+  ]) {
+    await expectStatus(`${proxyApiUrl}${protectedPath}`, 401);
+  }
   await expectStatus(`${proxyApiUrl}/categorias`, 401, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -165,13 +173,18 @@ try {
   createdProductIds.push(product.id);
   assert(product.isLowStock === true, 'El producto debía iniciar con stock bajo.');
 
-  const detail = await expectStatus(`${proxyApiUrl}/productos/${productId}`, 200);
+  const detail = await expectStatus(
+    `${proxyApiUrl}/productos/${productId}`,
+    200,
+    authorizedOptions('GET'),
+  );
   assert(detail.id === productId, 'La consulta por id devolvió otro producto.');
 
   const page = await expectStatus(
     `${proxyApiUrl}/productos?categoriaId=${categoryId}&stock=low&buscar=Producto%20QA` +
       '&pagina=1&tamanoPagina=5&ordenarPor=Price&direccion=Descending',
     200,
+    authorizedOptions('GET'),
   );
   assert(page.totalCount === 1 && page.items[0]?.id === productId, 'La página filtrada es incorrecta.');
   assert(page.pageNumber === 1 && page.pageSize === 5, 'Los metadatos de página son incorrectos.');
@@ -197,10 +210,12 @@ try {
   const firstPage = await expectStatus(
     `${proxyApiUrl}/productos?pagina=1&tamanoPagina=5&ordenarPor=Name&direccion=Ascending`,
     200,
+    authorizedOptions('GET'),
   );
   const secondPage = await expectStatus(
     `${proxyApiUrl}/productos?pagina=2&tamanoPagina=5&ordenarPor=Name&direccion=Ascending`,
     200,
+    authorizedOptions('GET'),
   );
   assert(
     firstPage.items.length === 5 && firstPage.hasNextPage === true && firstPage.totalPages >= 2,
@@ -212,7 +227,11 @@ try {
     'La segunda página repitió un resultado de la primera.',
   );
 
-  const lowStock = await expectStatus(`${proxyApiUrl}/productos/stock-bajo`, 200);
+  const lowStock = await expectStatus(
+    `${proxyApiUrl}/productos/stock-bajo`,
+    200,
+    authorizedOptions('GET'),
+  );
   assert(lowStock.some((item) => item.id === productId), 'El endpoint de stock bajo omitió el producto.');
 
   const updatedProduct = await expectStatus(
@@ -251,6 +270,7 @@ try {
   const movements = await expectStatus(
     `${proxyApiUrl}/movimientos-inventario?productoId=${productId}&pagina=1&tamanoPagina=10`,
     200,
+    authorizedOptions('GET'),
   );
   assert(movements.totalCount === 2, 'El historial no contiene los dos movimientos válidos.');
   assert(
@@ -262,13 +282,18 @@ try {
     `${proxyApiUrl}/movimientos-inventario?productoId=${productId}` +
       '&tipo=Entry&pagina=1&tamanoPagina=10',
     200,
+    authorizedOptions('GET'),
   );
   assert(
     entryMovements.totalCount === 1 && entryMovements.items[0]?.type === 'Entry',
     'El filtro de movimientos por tipo no devolvió únicamente la entrada.',
   );
 
-  const summary = await expectStatus(`${proxyApiUrl}/productos/resumen`, 200);
+  const summary = await expectStatus(
+    `${proxyApiUrl}/productos/resumen`,
+    200,
+    authorizedOptions('GET'),
+  );
   assert(summary.totalProducts >= 1, 'El resumen no contabilizó el producto temporal.');
 
   await expectStatus(
@@ -283,7 +308,11 @@ try {
   );
   createdProductIds = createdProductIds.filter((id) => id !== productId);
   productId = null;
-  await expectStatus(`${proxyApiUrl}/productos/${product.id}`, 404);
+  await expectStatus(
+    `${proxyApiUrl}/productos/${product.id}`,
+    404,
+    authorizedOptions('GET'),
+  );
   for (const extraProductId of extraProductIds) {
     await expectStatus(
       `${proxyApiUrl}/productos/${extraProductId}`,
@@ -299,7 +328,11 @@ try {
   );
   const deletedCategoryId = categoryId;
   categoryId = null;
-  await expectStatus(`${proxyApiUrl}/categorias/${deletedCategoryId}`, 404);
+  await expectStatus(
+    `${proxyApiUrl}/categorias/${deletedCategoryId}`,
+    404,
+    authorizedOptions('GET'),
+  );
 
   console.log('E2E OK: Angular/Nginx -> API -> JWT/CQRS -> SQL Server.');
   console.log('E2E OK: CRUD productos/categorías, stock, movimientos, filtros y paginación.');

@@ -1,7 +1,11 @@
 <div class="app-shell">
   <header class="app-shell__header">
     <mat-toolbar class="app-shell__toolbar">
-      <a class="app-shell__brand" routerLink="/productos" aria-label="Ir al inventario">
+      <a
+        class="app-shell__brand"
+        [routerLink]="authentication.isAuthenticated() ? '/productos' : '/login'"
+        [attr.aria-label]="authentication.isAuthenticated() ? 'Ir al inventario' : 'Ir al inicio de sesión'"
+      >
         <span class="app-shell__brand-mark" aria-hidden="true">A</span>
         <span class="app-shell__brand-copy">
           <strong>AGAVAL</strong>
@@ -9,43 +13,43 @@
         </span>
       </a>
 
-      <nav class="app-shell__nav" aria-label="Navegación principal">
-        <a
-          mat-button
-          routerLink="/productos"
-          routerLinkActive="app-shell__nav-link--active"
-          [routerLinkActiveOptions]="{ exact: true }"
-          ariaCurrentWhenActive="page"
-          aria-label="Ver todo el inventario"
-          class="app-shell__nav-link"
-        >
-          <mat-icon aria-hidden="true">inventory_2</mat-icon>
-          <span class="app-shell__nav-label">Inventario</span>
-        </a>
-        <a
-          mat-button
-          routerLink="/productos/stock-bajo"
-          routerLinkActive="app-shell__nav-link--active"
-          [routerLinkActiveOptions]="{ exact: true }"
-          ariaCurrentWhenActive="page"
-          aria-label="Ver productos con stock bajo"
-          class="app-shell__nav-link"
-        >
-          <mat-icon aria-hidden="true">production_quantity_limits</mat-icon>
-          <span class="app-shell__nav-label">Stock bajo</span>
-        </a>
-        <a
-          mat-button
-          routerLink="/movimientos"
-          routerLinkActive="app-shell__nav-link--active"
-          ariaCurrentWhenActive="page"
-          aria-label="Ver movimientos de inventario"
-          class="app-shell__nav-link"
-        >
-          <mat-icon aria-hidden="true">receipt_long</mat-icon>
-          <span class="app-shell__nav-label">Movimientos</span>
-        </a>
-        @if (authentication.isAuthenticated()) {
+      @if (authentication.isAuthenticated()) {
+        <nav class="app-shell__nav" aria-label="Navegación principal">
+          <a
+            mat-button
+            routerLink="/productos"
+            routerLinkActive="app-shell__nav-link--active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            ariaCurrentWhenActive="page"
+            aria-label="Ver todo el inventario"
+            class="app-shell__nav-link"
+          >
+            <mat-icon aria-hidden="true">inventory_2</mat-icon>
+            <span class="app-shell__nav-label">Inventario</span>
+          </a>
+          <a
+            mat-button
+            routerLink="/productos/stock-bajo"
+            routerLinkActive="app-shell__nav-link--active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            ariaCurrentWhenActive="page"
+            aria-label="Ver productos con stock bajo"
+            class="app-shell__nav-link"
+          >
+            <mat-icon aria-hidden="true">production_quantity_limits</mat-icon>
+            <span class="app-shell__nav-label">Stock bajo</span>
+          </a>
+          <a
+            mat-button
+            routerLink="/movimientos"
+            routerLinkActive="app-shell__nav-link--active"
+            ariaCurrentWhenActive="page"
+            aria-label="Ver movimientos de inventario"
+            class="app-shell__nav-link"
+          >
+            <mat-icon aria-hidden="true">receipt_long</mat-icon>
+            <span class="app-shell__nav-label">Movimientos</span>
+          </a>
           <a
             mat-button
             routerLink="/categorias"
@@ -57,8 +61,8 @@
             <mat-icon aria-hidden="true">category</mat-icon>
             <span class="app-shell__nav-label">Categorías</span>
           </a>
-        }
-      </nav>
+        </nav>
+      }
 
       @if (authentication.isAuthenticated()) {
         <button

@@ -14,7 +14,7 @@ export const authTokenInterceptor: HttpInterceptorFn = (request, next) => {
   return next(authenticatedRequest).pipe(
     catchError((error: unknown) => {
       if (error instanceof HttpErrorResponse && error.status === 401 && accessToken !== null) {
-        authentication.logout();
+        authentication.expireSession();
       }
 
       return throwError(() => error);

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authenticationGuard } from './core/authentication/authentication.guard';
+import { authenticationGuard, guestGuard } from './core/authentication/authentication.guard';
 
 export const routes: Routes = [
   {
@@ -9,6 +9,7 @@ export const routes: Routes = [
   },
   {
     path: 'productos',
+    canActivate: [authenticationGuard],
     loadChildren: () =>
       import('./features/products/routes').then((routesModule) => routesModule.PRODUCT_ROUTES),
   },
@@ -20,6 +21,7 @@ export const routes: Routes = [
   },
   {
     path: 'movimientos',
+    canActivate: [authenticationGuard],
     loadChildren: () =>
       import('./features/inventory-movements/routes').then(
         (routesModule) => routesModule.INVENTORY_MOVEMENT_ROUTES,
@@ -27,6 +29,7 @@ export const routes: Routes = [
   },
   {
     path: 'login',
+    canActivate: [guestGuard],
     loadComponent: () =>
       import('./features/authentication/pages/login-page/login-page').then(
         (pageModule) => pageModule.LoginPageComponent,

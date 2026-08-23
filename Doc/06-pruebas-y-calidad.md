@@ -49,7 +49,7 @@ npm run build
 npm audit
 ```
 
-Las 38 pruebas cubren los 16 componentes, shell, navegación visible, nombres accesibles para acciones, configuración de diálogos dentro del viewport, filtros/página/orden sincronizados con URL, interceptor JWT, rutas lazy y contratos HTTP de productos, categorías y movimientos. Se revisa además la ausencia de los anti-patrones expresos del estándar mediante búsqueda estática.
+Las 50 pruebas cubren los 16 componentes, shell autenticado/anónimo, navegación protegida, retorno al destino solicitado, persistencia/expiración de sesión, nombres accesibles para acciones, diálogos dentro del viewport, filtros/página/orden sincronizados con URL, interceptor JWT/401, rutas lazy y contratos HTTP. Se revisa además la ausencia de los anti-patrones expresos del estándar mediante búsqueda estática.
 
 ## Validación funcional en navegador
 
@@ -75,8 +75,8 @@ Además se repitió por HTTP, atravesando el reverse proxy del frontend, el cicl
 
 La pasada final debe mantener:
 
-- Backend: 16 tests aprobados, 0 fallidos.
-- Frontend: 38 tests aprobados, 0 fallidos.
+- Backend: 17 tests aprobados, 0 fallidos.
+- Frontend: 50 tests aprobados, 0 fallidos.
 - Build .NET Release: 0 warnings y 0 errores.
 - Lint Angular: sin hallazgos.
 - Build Angular production: exitoso.
@@ -90,7 +90,7 @@ Los archivos YAML de CI, despliegue, Compose y Kubernetes fueron parseados corre
 - SQL Server en estado `healthy`;
 - aplicación de la migración inicial y carga idempotente del seed;
 - `GET /health` con HTTP 200;
-- `GET /api/productos` y `GET /api/categorias` con HTTP 200 y datos persistidos;
+- `GET /api/productos` y `GET /api/categorias` autenticados con HTTP 200 y datos persistidos;
 - frontend servido por Nginx con HTTP 200;
 - conectividad frontend -> reverse proxy -> API -> SQL Server.
 - ciclo CRUD y ajuste de stock real, con limpieza del registro temporal al finalizar.
@@ -103,7 +103,7 @@ La instalación asistida añadió verificaciones no destructivas `--check`/`-Che
 
 El arranque, las solicitudes HTTP y el cierre se mantienen dentro del mismo step de Windows. Esto evita que la limpieza de procesos huérfanos del runner elimine los servidores iniciados en background antes de realizar las comprobaciones; un `trap` garantiza el cierre aun cuando una solicitud falle.
 
-Después de reproducir un fallo de detección en Windows con Node 25, se eliminó la evaluación JavaScript usada para obtener la versión y se reemplazó por `node --version`. El diagnóstico se verificó con Node 22.19.0 y se declaró en `package.json` el rango oficial de Angular 20.3. La pasada actual mantiene lint limpio, 38 pruebas frontend aprobadas y build de producción exitoso.
+Después de reproducir un fallo de detección en Windows con Node 25, se eliminó la evaluación JavaScript usada para obtener la versión y se reemplazó por `node --version`. El diagnóstico se verificó con Node 22.19.0 y se declaró en `package.json` el rango oficial de Angular 20.3. La pasada actual mantiene lint limpio, 50 pruebas frontend aprobadas y build de producción exitoso.
 
 La sección opcional se verificó con tests funcionales en memoria y con `scripts/e2e-smoke.mjs` contra el stack Docker y SQL Server real. El recorrido atraviesa Nginx, proxy Angular, ASP.NET Core, JWT, Controllers, MediatR, FluentValidation, Handlers y EF Core; cubre 401 sin token, login válido/inválido, CRUD de categorías con 409 por duplicado y por integridad referencial, eliminación física, consulta paginada/ordenada de productos, stock bajo, resumen y movimientos de entrada/salida.
 

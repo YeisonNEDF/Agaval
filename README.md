@@ -9,9 +9,9 @@ Solución full stack de la prueba técnica: API REST en .NET 10 con Clean Archit
 - Búsqueda, filtros, ordenamiento y paginación ejecutados en SQL Server.
 - Consulta específica de productos con stock bajo.
 - Entradas y salidas de inventario con historial persistente y pantalla paginada.
-- Autenticación JWT y autorización por rol para todas las operaciones de escritura.
+- Autenticación JWT obligatoria para consultar el inventario y autorización por rol para toda escritura.
 - Validación de dominio, FluentValidation y formularios tipados.
-- Problem Details, Swagger protegido, health check, 54 pruebas automatizadas y pipeline CI con E2E real.
+- Problem Details, Swagger protegido, health check, 67 pruebas automatizadas y pipeline CI con E2E real.
 - Migración/seed automático en desarrollo, Docker Compose, Kubernetes y despliegue Azure completamente automatizado.
 
 ## Estructura
@@ -82,7 +82,7 @@ Para revisar el equipo sin instalar ni arrancar nada:
 
 Los launchers guardan PID y logs nativos en `.run/`; esa carpeta no se versiona. En Docker, los datos persisten en el volumen `agaval_sqlserver-data`.
 
-Al finalizar, la consulta del inventario y del historial está disponible sin iniciar sesión. Para crear, editar, eliminar o ajustar existencias use la cuenta local de evaluación:
+Al finalizar, todas las funcionalidades del inventario exigen una sesión válida. Use la cuenta local de evaluación:
 
 ```text
 Usuario: admin

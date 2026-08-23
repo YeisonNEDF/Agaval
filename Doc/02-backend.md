@@ -155,11 +155,11 @@ Cada acción solo traduce el request a un mensaje MediatR y traduce el resultado
 
 ### `CategoriesController.cs`
 
-Expone listado, detalle, alta, edición y eliminación física. Las escrituras requieren `InventoryWrite`; `incluirInactivas=true` permite administrar todo el catálogo. Una eliminación que violaría la relación restrictiva devuelve HTTP 409 antes de llegar a SQL Server.
+Expone listado, detalle, alta, edición y eliminación física. El controlador completo exige JWT y las escrituras requieren además `InventoryWrite`; `incluirInactivas=true` permite administrar todo el catálogo. Una eliminación que violaría la relación restrictiva devuelve HTTP 409 antes de llegar a SQL Server.
 
 ### `AuthenticationController.cs` e `InventoryMovementsController.cs`
 
-El primero entrega la sesión JWT mediante `POST /api/autenticacion/login`. El segundo consulta el historial con `productoId`, `tipo`, `pagina` y `tamanoPagina`.
+El primero entrega públicamente la sesión JWT mediante `POST /api/autenticacion/login`. El segundo exige sesión y consulta el historial con `productoId`, `tipo`, `pagina` y `tamanoPagina`. `ProductsController` también exige autenticación a nivel de clase; sus escrituras agregan la política por rol.
 
 ### `GlobalExceptionHandler.cs`
 
@@ -180,6 +180,6 @@ Convierte validaciones e invariantes de dominio a 400, autenticación fallida a 
 - `ArchitectureDependencyTests`: impide referencias prohibidas desde Domain y Application.
 - `ProductsEndpointsTests`: recorre por HTTP autorización, validación, CRUD, stock bajo, ajuste, historial, paginación y resumen.
 - `CategoriesEndpointsTests`: demuestra 401, alta, conflicto por nombre, edición, 409 al eliminar una categoría usada y eliminación física después de liberar la relación.
-- `AuthenticationEndpointsTests`: rechaza credenciales inválidas y valida la sesión JWT.
+- `AuthenticationEndpointsTests`: rechaza credenciales inválidas, valida la sesión JWT y demuestra 401 en todas las consultas de inventario sin token.
 
-La verificación actual ejecuta 16 pruebas .NET: 8 de Domain, 5 de Application y 3 funcionales.
+La verificación actual ejecuta 17 pruebas .NET: 8 de Domain, 5 de Application y 4 funcionales.

@@ -3,11 +3,14 @@ using Agaval.Inventory.Application.Features.InventoryMovements;
 using Agaval.Inventory.Application.Features.InventoryMovements.GetList;
 using Agaval.Inventory.Domain.Enums;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Agaval.Inventory.Api.Controllers;
 
 [ApiController]
+[Authorize]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [Route("api/movimientos-inventario")]
 public sealed class InventoryMovementsController(ISender sender) : ControllerBase
 {

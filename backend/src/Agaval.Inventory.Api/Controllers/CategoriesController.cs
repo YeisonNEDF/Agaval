@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Agaval.Inventory.Api.Controllers;
 
 [ApiController]
+[Authorize]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [Route("api/categorias")]
 public sealed class CategoriesController(ISender sender) : ControllerBase
 {
