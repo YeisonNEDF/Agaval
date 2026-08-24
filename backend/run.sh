@@ -2,7 +2,7 @@
 
 set -eu
 
-PROJECT_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+BACKEND_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
 if ! command -v dotnet >/dev/null 2>&1; then
   printf 'Error: .NET SDK 10 no está instalado o dotnet no está disponible en PATH.\n' >&2
@@ -14,7 +14,7 @@ if ! dotnet --list-sdks 2>/dev/null | grep -q '^10\.'; then
   exit 1
 fi
 
-cd "$PROJECT_ROOT/backend"
+cd "$BACKEND_DIR"
 exec dotnet run \
   --project src/Agaval.Inventory.Api/Agaval.Inventory.Api.csproj \
   --launch-profile http \

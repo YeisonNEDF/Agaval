@@ -7,5 +7,5 @@ if errorlevel 1 (
   exit /b 1
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0api.ps1" %*
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0run.ps1" %*
 exit /b %errorlevel%

@@ -9,24 +9,15 @@ permissions:
   contents: read
 
 jobs:
-  launchers:
-    name: Launchers and Compose
+  repository:
+    name: Repository configuration
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate POSIX launcher
+      - name: Validate backend command
         run: |
-          test -x start.sh
-          test -x api.sh
-          sh -n start.sh
-          sh -n api.sh
-          ./start.sh --help
-          ./start.sh --check --no-install
-      - name: Validate PowerShell launcher
-        shell: pwsh
-        run: |
-          ./start.ps1 -Help
-          ./start.ps1 -Check -NoInstall
+          test -x backend/run.sh
+          sh -n backend/run.sh
       - name: Resolve Compose configuration
         run: docker compose --env-file .env.example config --quiet
       - name: Validate Azure Bicep templates
@@ -34,49 +25,20 @@ jobs:
           az bicep build --file infra/azure/foundation.bicep --stdout >/dev/null
           az bicep build --file infra/azure/apps.bicep --stdout >/dev/null
 
-  windows-launcher:
-    name: Windows Git Bash native smoke
+  windows-commands:
+    name: Windows backend commands
     runs-on: windows-latest
-    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: Validate PowerShell diagnosis
+      - name: Validate PowerShell command
         shell: powershell
-        run: |
-          .\start.ps1 -Help
-          .\start.ps1 -Check -NoInstall
-      - name: Validate CMD entry point
+        run: .\backend\run.ps1 --help
+      - name: Validate CMD command
         shell: cmd
-        run: |
-          api.cmd --help
-          start.cmd -Check -NoInstall
-      - name: Validate Git Bash entry point
-        shell: bash
-        run: ./start.sh --check --no-install
-      - name: Start and verify full native stack from start.sh
-        shell: bash
-        run: |
-          trap './start.sh --stop --no-install || true' EXIT
-          ./start.sh --mode native --no-install
-          node scripts/e2e-smoke.mjs http://localhost:5100 http://localhost:4200
-      - name: Print launcher diagnostics on failure
-        if: failure()
-        shell: powershell
-        run: |
-          Get-ChildItem .run -ErrorAction SilentlyContinue
-          Get-Content .run\launcher-error.log -ErrorAction SilentlyContinue
-          Get-Content .run\backend.err.log -ErrorAction SilentlyContinue
-          Get-Content .run\backend.out.log -ErrorAction SilentlyContinue
-          Get-Content .run\frontend.err.log -ErrorAction SilentlyContinue
-          Get-Content .run\frontend.out.log -ErrorAction SilentlyContinue
+        run: backend\run.cmd --help
 
   backend:
     name: Backend
@@ -90,8 +52,8 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet restore Agaval.Inventory.slnx
-      - name: Validate abbreviated API launcher
-        run: ../api.sh --help
+      - name: Validate abbreviated backend command
+        run: ./run.sh --help
       - run: dotnet tool restore
       - run: dotnet format Agaval.Inventory.slnx --verify-no-changes --no-restore
       - run: dotnet build Agaval.Inventory.slnx --configuration Release --no-restore
@@ -127,7 +89,7 @@ jobs:
     name: Docker + SQL Server E2E
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [launchers, windows-launcher, backend, frontend]
+    needs: [repository, windows-commands, backend, frontend]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

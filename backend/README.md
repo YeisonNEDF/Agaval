@@ -27,12 +27,12 @@ Infrastructure -> Application -> Domain
 ## Requisitos
 
 - .NET SDK 10.
-- SQL Server 2022 en `localhost:1433` o una instancia accesible.
+- SQL Server LocalDB en Windows o una instancia SQL Server accesible.
 
 La configuración Development usa:
 
 ```text
-Server=localhost,1433;Database=GestorInventarioDB;User Id=sa;Password=Agaval_local_2026!;Encrypt=True;TrustServerCertificate=True
+Server=(localdb)\MSSQLLocalDB;Database=GestorInventarioDB;Trusted_Connection=True;TrustServerCertificate=True;
 ```
 
 Para usar otra conexión:
@@ -43,23 +43,22 @@ export ConnectionStrings__Database='Server=SERVIDOR;Database=GestorInventarioDB;
 
 ## Ejecutar
 
-Desde la raíz del repositorio puede iniciar únicamente la API con el lanzador abreviado:
+Abra una terminal dentro de `backend/` y ejecute el comando correspondiente:
 
 ```bash
 # macOS, Linux o Git Bash
-./api.sh
+./run.sh
 
 # Windows CMD
-api.cmd
+run.cmd
 
 # Windows PowerShell
-.\api.ps1
+.\run.ps1
 ```
 
-El lanzador valida que exista .NET SDK 10 y utiliza el perfil `http`, configurado en `http://localhost:5100`. Es equivalente a ejecutar manualmente:
+El comando valida que exista .NET SDK 10 y utiliza el perfil `http`, configurado en `http://localhost:5100`. Es equivalente a ejecutar manualmente:
 
 ```bash
-dotnet restore Agaval.Inventory.slnx
 dotnet run --project src/Agaval.Inventory.Api --launch-profile http
 ```
 
@@ -71,7 +70,7 @@ En Development, la API detecta y aplica automáticamente las migraciones pendien
 
 ## Autenticación y permisos
 
-Productos, categorías y movimientos exigen un JWT válido incluso para consultas. Crear, modificar, eliminar o ajustar stock exige además el rol `InventoryManager`. Solo `POST /api/autenticacion/login` y `/health` permanecen anónimos. La cuenta Development incluida es `admin` / `Agaval_admin_2026!`; todas las opciones se reemplazan con variables `Authentication__*` o con las variables `AUTH_*` que traducen los launchers y Compose.
+Productos, categorías y movimientos exigen un JWT válido incluso para consultas. Crear, modificar, eliminar o ajustar stock exige además el rol `InventoryManager`. Solo `POST /api/autenticacion/login` y `/health` permanecen anónimos. La cuenta Development incluida es `admin` / `Agaval_admin_2026!`; todas las opciones se reemplazan con variables `Authentication__*`.
 
 ## Contrato adicional
 

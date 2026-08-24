@@ -27,4 +27,4 @@ npm test -- --watch=false --browsers=ChromeHeadless
 npm run build
 ```
 
-La última ejecución aprobó 50 pruebas. Los 16 componentes tienen sus archivos `.ts`, `.html`, `.scss` y `.spec.ts` colocados en la misma carpeta. Consulte el desglose técnico general en [`../Doc/03-frontend.md`](../Doc/03-frontend.md) y los extras en [`../Doc/09-funcionalidades-opcionales.md`](../Doc/09-funcionalidades-opcionales.md).
+La última ejecución aprobó 50 pruebas. Los 16 componentes tienen sus archivos `.ts`, `.html`, `.scss` y `.spec.ts` colocados en la misma carpeta.
