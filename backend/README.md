@@ -43,6 +43,21 @@ export ConnectionStrings__Database='Server=SERVIDOR;Database=GestorInventarioDB;
 
 ## Ejecutar
 
+Desde la raíz del repositorio puede iniciar únicamente la API con el lanzador abreviado:
+
+```bash
+# macOS, Linux o Git Bash
+./api.sh
+
+# Windows CMD
+api.cmd
+
+# Windows PowerShell
+.\api.ps1
+```
+
+El lanzador valida que exista .NET SDK 10 y utiliza el perfil `http`, configurado en `http://localhost:5100`. Es equivalente a ejecutar manualmente:
+
 ```bash
 dotnet restore Agaval.Inventory.slnx
 dotnet run --project src/Agaval.Inventory.Api --launch-profile http

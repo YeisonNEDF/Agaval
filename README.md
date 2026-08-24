@@ -167,6 +167,8 @@ cd ..
 node scripts/e2e-smoke.mjs http://localhost:5100 http://localhost:4200
 ```
 
+Para iniciar solamente el backend desde la raíz use `./api.sh` en macOS/Linux/Git Bash, `api.cmd` en Windows CMD o `.\api.ps1` en PowerShell. El puerto `5100` ya está definido en el perfil de ejecución y no debe escribirse en la terminal.
+
 Las peticiones de ejemplo están en [`backend/src/Agaval.Inventory.Api/Agaval.Inventory.Api.http`](backend/src/Agaval.Inventory.Api/Agaval.Inventory.Api.http).
 
 ## Política por ambiente
