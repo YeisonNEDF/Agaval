@@ -19,7 +19,15 @@ Rutas disponibles:
 
 Todas las rutas de inventario están protegidas por guard; únicamente `/login` es pública y redirige a `/productos` cuando ya existe una sesión válida. El cierre, la expiración del token o una respuesta 401 abandonan inmediatamente la feature protegida.
 
-La cuenta de evaluación es `admin` / `Agaval_admin_2026!`. El token se conserva en `sessionStorage`, se elimina al expirar y un interceptor lo adjunta solamente a las llamadas `/api`.
+Credenciales disponibles para el revisor:
+
+```text
+URL: http://localhost:4200/login
+Usuario: admin
+Contraseña: Agaval_admin_2026!
+```
+
+El token se conserva en `sessionStorage`, se elimina al expirar y un interceptor lo adjunta solamente a las llamadas `/api`.
 
 ```bash
 npm run lint

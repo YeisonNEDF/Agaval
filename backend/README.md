@@ -70,7 +70,17 @@ En Development, la API detecta y aplica automáticamente las migraciones pendien
 
 ## Autenticación y permisos
 
-Productos, categorías y movimientos exigen un JWT válido incluso para consultas. Crear, modificar, eliminar o ajustar stock exige además el rol `InventoryManager`. Solo `POST /api/autenticacion/login` y `/health` permanecen anónimos. La cuenta Development incluida es `admin` / `Agaval_admin_2026!`; todas las opciones se reemplazan con variables `Authentication__*`.
+Productos, categorías y movimientos exigen un JWT válido incluso para consultas. Crear, modificar, eliminar o ajustar stock exige además el rol `InventoryManager`. Solo `POST /api/autenticacion/login` y `/health` permanecen anónimos.
+
+Credenciales incluidas en Development para la evaluación:
+
+```text
+Usuario: admin
+Contraseña: Agaval_admin_2026!
+Rol: InventoryManager
+```
+
+Todas las opciones se pueden reemplazar con variables `Authentication__*`.
 
 ## Contrato adicional
 

@@ -107,14 +107,16 @@ npm start
 
 El frontend queda disponible en `http://localhost:4200`. Su proxy de desarrollo envía las peticiones `/api` a `http://localhost:5100`.
 
-## Acceso local
+## Credenciales de evaluación para el revisor
+
+Después de iniciar ambos proyectos, abra `http://localhost:4200/login` e ingrese con:
 
 ```text
 Usuario: admin
 Contraseña: Agaval_admin_2026!
 ```
 
-Todas las rutas del inventario exigen una sesión válida. Solo el login del frontend, `POST /api/autenticacion/login` y `/health` son públicos.
+Estas credenciales son exclusivamente locales y permiten revisar todos los flujos protegidos. Todas las rutas del inventario exigen una sesión válida; solo el login del frontend, `POST /api/autenticacion/login` y `/health` son públicos.
 
 ## Variables relevantes
 
