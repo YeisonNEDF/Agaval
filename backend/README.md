@@ -82,6 +82,20 @@ Rol: InventoryManager
 
 Todas las opciones se pueden reemplazar con variables `Authentication__*`.
 
+## Respuestas del cuestionario - Backend
+
+### ¿Por qué `ProductosController` no debe acceder directamente al `PersistenceContext`?
+
+El controlador pertenece a presentación y solo debe traducir HTTP. Al enviar un Command o Query mediante MediatR, el caso de uso permanece en Application y puede reutilizarse desde otras entradas sin duplicar comportamiento.
+
+Esta decisión aporta responsabilidad única, inversión de dependencias y testabilidad. Application depende de abstracciones, no de EF Core, lo que permite probar Handlers sin SQL Server y centralizar validación, logging y transacciones mediante behaviors. Un `DbContext` directo acoplaría HTTP, negocio y persistencia, haciendo más difícil mantener, probar o sustituir la tecnología de datos.
+
+### ¿Por qué el correo por stock bajo no debe enviarse directamente desde `CrearProductoCommandHandler`?
+
+El correo es un efecto externo distinto de persistir el producto. Integrarlo en el Handler viola responsabilidad única, acopla el caso de uso a un proveedor y vuelve ambiguo el resultado si el producto se guarda pero la notificación falla.
+
+La alternativa es emitir un evento `ProductCreatedWithLowStock` y procesarlo en un Handler independiente. Con Outbox, producto y evento se confirman en la misma transacción y un worker publica y reintenta el correo de manera idempotente. Esto aplica SRP, Open/Closed e inversión de dependencias y separa consistencia transaccional de consistencia eventual.
+
 ## Contrato adicional
 
 - `GET /api/productos`: búsqueda, filtros, orden y paginación server-side.
